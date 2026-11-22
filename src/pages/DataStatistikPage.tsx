@@ -196,7 +196,7 @@ export const DataStatistikPage: React.FC = () => {
 
         <div className="flex flex-wrap items-center gap-2">
           {!isOnline && (
-            <span className="inline-flex min-h-[36px] items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+            <span className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full bg-amber-50 px-3.5 py-1.5 text-xs font-semibold text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
               <WifiOff className="h-3.5 w-3.5" />
               <span>Mode Offline (Cache Tersimpan)</span>
             </span>
@@ -206,7 +206,7 @@ export const DataStatistikPage: React.FC = () => {
               type="button"
               disabled={loadingSheet || isFetchingStats || !isOnline}
               onClick={() => fetchAndCacheStatistics()}
-              className="inline-flex min-h-[40px] items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 disabled:opacity-50 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 cursor-pointer"
+              className="inline-flex min-h-[40px] items-center gap-2 rounded-full bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 disabled:opacity-50 dark:bg-emerald-950/40 dark:text-emerald-300 cursor-pointer"
             >
               <RefreshCw
                 className={`h-4 w-4 ${loadingSheet || isFetchingStats ? 'animate-spin' : ''}`}
@@ -218,7 +218,7 @@ export const DataStatistikPage: React.FC = () => {
       </div>
 
       {(hookStatusMsg || hookError || offlineCache.statistics?.cachedAt) && (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-stone-200 bg-white px-4 py-2.5 text-xs text-stone-600 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-300">
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-white px-4 py-3 text-xs text-stone-600 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22] dark:text-stone-300">
           <div>
             {offlineCache.statistics?.cachedAt && (
               <span>
@@ -244,7 +244,7 @@ export const DataStatistikPage: React.FC = () => {
       )}
 
       {isPreviewActive && sheetMeta && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-xs text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-amber-50 px-4 py-3 text-xs text-amber-950 dark:bg-amber-950/30 dark:text-amber-200">
           <div>
             <span className="font-bold">Mode Pratinjau Grafik Google Sheets:</span> Menampilkan{' '}
             <strong className="font-tabular">{previewRows?.length}</strong> unit dari{' '}
@@ -253,16 +253,16 @@ export const DataStatistikPage: React.FC = () => {
           <button
             type="button"
             onClick={() => setPreviewOnChart(false)}
-            className="rounded-lg border border-amber-400/70 bg-white px-3 py-1 font-semibold text-amber-900 hover:bg-amber-100 dark:border-amber-700 dark:bg-stone-900 dark:text-amber-200 cursor-pointer"
+            className="rounded-full bg-white px-3.5 py-1.5 font-semibold text-amber-900 shadow-xs hover:bg-amber-100 dark:bg-[#161A22] dark:text-amber-200 cursor-pointer"
           >
-            Kembali ke Data Aktif Portal
+            Kembali ke Data Aktif
           </button>
         </div>
       )}
 
       {/* Ringkasan Angka */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <div className="rounded-2xl border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-900">
+      <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
+        <div className="rounded-[24px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22]">
           <p className="text-xs font-semibold text-stone-500 dark:text-stone-400">
             Total Kepala Keluarga
           </p>
@@ -271,7 +271,7 @@ export const DataStatistikPage: React.FC = () => {
           </p>
           <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">KK Terdaftar</p>
         </div>
-        <div className="rounded-2xl border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-900">
+        <div className="rounded-[24px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22]">
           <p className="text-xs font-semibold text-stone-500 dark:text-stone-400">
             Total Warga Jemaat
           </p>
@@ -280,7 +280,7 @@ export const DataStatistikPage: React.FC = () => {
           </p>
           <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">Jiwa Aktif</p>
         </div>
-        <div className="rounded-2xl border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-900">
+        <div className="rounded-[24px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22]">
           <p className="text-xs font-semibold text-stone-500 dark:text-stone-400">
             Sektor Pelayanan
           </p>
@@ -292,7 +292,7 @@ export const DataStatistikPage: React.FC = () => {
               '-'}
           </p>
         </div>
-        <div className="rounded-2xl border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-900">
+        <div className="rounded-[24px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22]">
           <p className="text-xs font-semibold text-stone-500 dark:text-stone-400">
             Unit Pelayanan
           </p>
@@ -323,10 +323,10 @@ export const DataStatistikPage: React.FC = () => {
       />
 
       {/* Tabel Rincian Sektor & Unit */}
-      <section className="rounded-2xl border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-900">
+      <section className="rounded-[24px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22] sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="flex items-center gap-2 text-base font-bold text-stone-900 dark:text-stone-100">
-            <BarChart3 className="h-4 w-4 text-amber-600" />
+            <BarChart3 className="h-4 w-4 text-amber-600 dark:text-amber-400" />
             <span>
               {isPreviewActive
                 ? 'Tabel Pratinjau Data Google Sheets'
@@ -349,7 +349,7 @@ export const DataStatistikPage: React.FC = () => {
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[600px] text-left text-xs sm:text-sm">
             <thead>
-              <tr className="border-b border-stone-200 text-xs font-semibold text-stone-500 dark:border-stone-800 dark:text-stone-400">
+              <tr className="border-b border-stone-100 text-xs font-semibold text-stone-500 dark:border-stone-800/80 dark:text-stone-400">
                 <th className="py-2.5 pr-3">Sektor</th>
                 <th className="py-2.5 pr-3">Unit</th>
                 <th className="py-2.5 px-2 text-right">KK</th>
@@ -361,9 +361,9 @@ export const DataStatistikPage: React.FC = () => {
                 <th className="py-2.5 pl-2 text-right">Lansia</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-stone-100 dark:divide-stone-800">
+            <tbody className="divide-y divide-stone-100 dark:divide-stone-800/80">
               {displayedRows.map((row) => (
-                <tr key={row.id} className="hover:bg-stone-50/70 dark:hover:bg-stone-800/40">
+                <tr key={row.id} className="hover:bg-[#F4F6F9]/70 dark:hover:bg-[#1E232D]/50">
                   <td className="py-3 pr-3 font-medium text-stone-900 dark:text-stone-100">
                     {row.sektor}
                   </td>
@@ -393,8 +393,8 @@ export const DataStatistikPage: React.FC = () => {
               ))}
             </tbody>
             <tfoot>
-              <tr className="border-t-2 border-stone-200 bg-stone-50/80 font-bold text-stone-900 dark:border-stone-700 dark:bg-stone-800/50 dark:text-stone-100">
-                <td colSpan={2} className="py-3 pr-3">
+              <tr className="border-t border-stone-200 bg-[#F4F6F9] font-bold text-stone-900 dark:border-stone-700 dark:bg-[#1E232D] dark:text-stone-100">
+                <td colSpan={2} className="py-3 pl-2 pr-3 rounded-l-xl">
                   Total Keseluruhan ({displayedRows.length} Unit)
                 </td>
                 <td className="font-tabular py-3 px-2 text-right">
@@ -415,7 +415,7 @@ export const DataStatistikPage: React.FC = () => {
                 <td className="font-tabular py-3 px-2 text-right">
                   {totals.perpri.toLocaleString('id-ID')}
                 </td>
-                <td className="font-tabular py-3 pl-2 text-right">
+                <td className="font-tabular py-3 pl-2 pr-2 text-right rounded-r-xl">
                   {totals.lansia.toLocaleString('id-ID')}
                 </td>
               </tr>
@@ -425,7 +425,7 @@ export const DataStatistikPage: React.FC = () => {
       </section>
 
       {/* Impor Data Statistik dari Google Sheet Aplikasi Lain */}
-      <section className="rounded-3xl border border-stone-200 bg-white p-6 dark:border-stone-800 dark:bg-stone-900">
+      <section className="rounded-[24px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22] sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 className="flex items-center gap-2 text-lg font-bold text-stone-900 dark:text-stone-100">
@@ -437,7 +437,7 @@ export const DataStatistikPage: React.FC = () => {
             </p>
             <p className="mt-1.5 text-xs text-stone-500 dark:text-stone-400">
               Kolom header yang didukung:{' '}
-              <code className="rounded bg-stone-100 px-1.5 py-0.5 dark:bg-stone-800">
+              <code className="rounded-lg bg-[#F4F6F9] px-2 py-0.5 dark:bg-[#1E232D]">
                 Sektor | Unit | KK | Jiwa | PAR | PP | PERWATA | PERPRI | LANSIA
               </code>
             </p>
@@ -470,13 +470,13 @@ export const DataStatistikPage: React.FC = () => {
             value={sheetInput}
             onChange={(e) => setSheetInput(e.target.value)}
             placeholder="Tempel URL atau ID Google Spreadsheet (mis. https://docs.google.com/spreadsheets/d/...)"
-            className="flex-1 rounded-xl border border-stone-200 bg-stone-50 px-3.5 py-2.5 text-sm text-stone-900 focus:border-[#7F1D1D] focus:outline-none dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100"
+            className="flex-1 rounded-full bg-[#F4F6F9] px-4 py-3 text-sm text-stone-900 focus:ring-2 focus:ring-[#7F1D1D]/25 focus:outline-none dark:bg-[#1E232D] dark:text-stone-100"
           />
           <button
             type="button"
             onClick={() => loadFromSpreadsheet(sheetInput)}
             disabled={loadingSheet || !isGoogleConnected}
-            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-[#7F1D1D] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#68151B] disabled:opacity-50 cursor-pointer"
+            className="inline-flex min-h-[46px] items-center justify-center gap-2 rounded-full bg-[#7F1D1D] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#68151B] disabled:opacity-50 cursor-pointer"
           >
             <RefreshCw className={`h-4 w-4 ${loadingSheet ? 'animate-spin' : ''}`} />
             <span>Ambil Daftar Sheet</span>
@@ -488,14 +488,14 @@ export const DataStatistikPage: React.FC = () => {
         )}
 
         {importSuccessMsg && (
-          <div className="mt-3 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-xs font-medium text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200">
+          <div className="mt-3 flex items-center gap-2 rounded-2xl bg-emerald-50 px-4 py-3 text-xs font-medium text-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-200">
             <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-700 dark:text-emerald-400" />
             <span>{importSuccessMsg}</span>
           </div>
         )}
 
         {sheetMeta && (
-          <div className="mt-5 space-y-4 border-t border-stone-100 pt-4 dark:border-stone-800">
+          <div className="mt-5 space-y-4 border-t border-stone-100 pt-4 dark:border-stone-800/80">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm font-semibold text-stone-900 dark:text-stone-100">
                 Spreadsheet: {sheetMeta.title}
@@ -506,10 +506,10 @@ export const DataStatistikPage: React.FC = () => {
                     key={tab.sheetId}
                     type="button"
                     onClick={() => handleFetchTabPreview(tab.title)}
-                    className={`min-h-[34px] rounded-lg px-3 text-xs font-semibold cursor-pointer ${
+                    className={`min-h-[34px] rounded-full px-3.5 text-xs font-semibold cursor-pointer ${
                       selectedTab === tab.title
-                        ? 'bg-amber-500 text-stone-950'
-                        : 'bg-stone-100 text-stone-700 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300'
+                        ? 'bg-amber-400 text-stone-950'
+                        : 'bg-[#F4F6F9] text-stone-700 hover:bg-stone-200/70 dark:bg-[#1E232D] dark:text-stone-300'
                     }`}
                   >
                     {tab.title}
@@ -519,7 +519,7 @@ export const DataStatistikPage: React.FC = () => {
             </div>
 
             {previewRows && previewRows.length > 0 && (
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-stone-200 bg-stone-50/70 p-4 dark:border-stone-800 dark:bg-stone-800/40">
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-[#F4F6F9] p-4 dark:bg-[#1E232D]">
                 <p className="text-xs text-stone-700 dark:text-stone-300">
                   Ditemukan <strong className="font-tabular">{previewRows.length}</strong> baris statistik dari tab{' '}
                   <strong>"{selectedTab}"</strong>.
@@ -529,7 +529,7 @@ export const DataStatistikPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setPreviewOnChart((prev) => !prev)}
-                    className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border border-stone-300 bg-white px-3.5 py-1.5 text-xs font-semibold text-stone-800 hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 cursor-pointer"
+                    className="inline-flex min-h-[38px] items-center gap-1.5 rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-stone-800 shadow-xs hover:bg-stone-100 dark:bg-[#161A22] dark:text-stone-200 cursor-pointer"
                   >
                     <Eye className="h-3.5 w-3.5" />
                     <span>
@@ -541,7 +541,7 @@ export const DataStatistikPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setConfirmImportOpen(true)}
-                      className="inline-flex min-h-[38px] items-center gap-2 rounded-xl bg-emerald-700 px-4 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800 cursor-pointer"
+                      className="inline-flex min-h-[38px] items-center gap-2 rounded-full bg-emerald-700 px-4 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800 cursor-pointer"
                     >
                       <Download className="h-4 w-4" />
                       <span>Terapkan ke Statistik Portal</span>

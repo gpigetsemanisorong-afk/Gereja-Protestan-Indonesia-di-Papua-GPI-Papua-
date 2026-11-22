@@ -73,17 +73,16 @@ export const TentangAplikasiPage: React.FC = () => {
   const { data, setRoute } = usePortal();
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8">
+    <div className="mx-auto max-w-4xl space-y-6">
       {/* Header Info */}
-      <section className="rounded-3xl border border-stone-200 bg-white p-6 dark:border-stone-800 dark:bg-stone-900 sm:p-8">
-        <div className="flex flex-wrap items-center gap-4 border-b border-stone-100 pb-6 dark:border-stone-800">
+      <section className="rounded-[24px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22] sm:p-8">
+        <div className="flex flex-wrap items-center gap-4 border-b border-stone-100 pb-6 dark:border-stone-800/80">
           <ChurchLogo size="lg" />
           <div>
-            <div className="inline-flex items-center gap-1.5 rounded-lg bg-[#7F1D1D]/10 px-3 py-1 text-xs font-semibold text-[#7F1D1D] dark:bg-amber-500/15 dark:text-amber-400">
-              <Sparkles className="h-3.5 w-3.5" />
-              <span>Tentang Aplikasi Portal Jemaat</span>
-            </div>
-            <h1 className="mt-2 text-2xl font-bold text-stone-900 dark:text-stone-100 sm:text-3xl">
+            <p className="text-xs font-semibold text-[#7F1D1D] dark:text-amber-400">
+              Tentang Aplikasi Portal Jemaat
+            </p>
+            <h1 className="mt-1 text-2xl font-bold text-stone-900 dark:text-stone-100 sm:text-3xl">
               {data.profile.name}
             </h1>
             <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
@@ -97,22 +96,22 @@ export const TentangAplikasiPage: React.FC = () => {
             <strong>Portal Informasi & Pelayanan Jemaat GPI Getsemani Sorong</strong> adalah aplikasi digital berbasis web modern yang dirancang khusus untuk mempermudah warga jemaat dan Majelis dalam mengakses informasi peribadahan, warta, pembinaan iman, serta layanan pastoral di lingkungan Klasis Sorong Raya.
           </p>
           <p>
-            Aplikasi ini dikembangkan dengan teknologi PWA (*Progressive Web App*), memungkinkan jemaat untuk mengakses fitur-fitur penting seperti Alkitab, Kidung Pujian, dan Tata Ibadah bahkan saat berada dalam mode offline di perangkat seluler maupun komputer.
+            Aplikasi ini dikembangkan dengan teknologi PWA (<em>Progressive Web App</em>), memungkinkan jemaat untuk mengakses fitur-fitur penting seperti Alkitab, Kidung Pujian, dan Tata Ibadah bahkan saat berada dalam mode offline di perangkat seluler maupun komputer.
           </p>
         </div>
 
-        <div className="mt-6 flex flex-wrap gap-3">
+        <div className="mt-6 flex flex-wrap gap-2.5">
           <button
             type="button"
             onClick={() => setRoute('beranda')}
-            className="inline-flex min-h-[42px] items-center gap-2 rounded-xl bg-[#7F1D1D] px-5 py-2.5 text-xs font-semibold text-white hover:bg-[#68151B] cursor-pointer"
+            className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-[#7F1D1D] px-5 py-2 text-xs font-semibold text-white hover:bg-[#68151B] cursor-pointer"
           >
             <span>Kembali ke Beranda</span>
           </button>
           <button
             type="button"
             onClick={() => setRoute('profil')}
-            className="inline-flex min-h-[42px] items-center gap-2 rounded-xl border border-stone-300 bg-white px-5 py-2.5 text-xs font-semibold text-stone-700 hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200 cursor-pointer"
+            className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-[#F4F6F9] px-5 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-200/70 dark:bg-[#1E232D] dark:text-stone-200 cursor-pointer"
           >
             <span>Profil & Kontak Gereja</span>
           </button>
@@ -130,16 +129,16 @@ export const TentangAplikasiPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
           {APP_FEATURES.map((feat, idx) => {
             const Icon = feat.icon;
             return (
               <div
                 key={idx}
-                className="rounded-2xl border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-900"
+                className="rounded-[24px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22]"
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#7F1D1D]/10 text-[#7F1D1D] dark:bg-amber-500/15 dark:text-amber-400">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#7F1D1D]/10 text-[#7F1D1D] dark:bg-amber-400/15 dark:text-amber-300">
                     <Icon className="h-5 w-5" />
                   </div>
                   <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100">
@@ -156,8 +155,8 @@ export const TentangAplikasiPage: React.FC = () => {
       </section>
 
       {/* Informasi Teknis & Keamanan */}
-      <section className="rounded-3xl border border-stone-200 bg-white p-6 dark:border-stone-800 dark:bg-stone-900 sm:p-8">
-        <div className="flex items-center gap-2.5 border-b border-stone-100 pb-4 dark:border-stone-800">
+      <section className="rounded-[24px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22] sm:p-7">
+        <div className="flex items-center gap-2.5 border-b border-stone-100 pb-4 dark:border-stone-800/80">
           <ShieldCheck className="h-5 w-5 text-[#7F1D1D] dark:text-amber-400" />
           <h2 className="text-base font-bold text-stone-900 dark:text-stone-100">
             Penatalayanan, Data & Keamanan

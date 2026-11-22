@@ -45,32 +45,32 @@ export const JadwalIbadahPage: React.FC = () => {
           Jadwal Ibadah Jemaat
         </h1>
         <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
-          Ibadah Minggu, Kategorial Unsur (PAR, PP, PERWATA, PERPRI, LANSIA), serta Ibadah Sektor Filadelfia & Sektor Petra.
+          Ibadah Minggu, Wadah Kategorial (PAR, PP, PERWATA, PERPRI, LANSIA), serta Ibadah Sektor Filadelfia & Sektor Petra.
         </p>
       </div>
 
       {/* Split-screen on desktop */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[340px_1fr] lg:items-start">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr] lg:items-start">
         {/* Left Filter Panel */}
-        <aside className="space-y-5 rounded-2xl border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-900 lg:sticky lg:top-20">
+        <aside className="space-y-5 rounded-[24px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22] lg:sticky lg:top-20">
           <div>
             <p className="text-xs font-semibold text-stone-500 dark:text-stone-400">
               Kategori Ibadah
             </p>
-            <div className="mt-2 grid grid-cols-2 gap-2">
+            <div className="mt-2.5 grid grid-cols-2 gap-2">
               {(['Semua', 'Ibadah Minggu', 'Unsur', 'Sektor/Unit'] as CategoryFilter[]).map(
                 (cat) => (
                   <button
                     key={cat}
                     type="button"
                     onClick={() => setCategoryFilter(cat)}
-                    className={`min-h-[40px] rounded-xl px-3 py-2 text-xs font-semibold transition-colors cursor-pointer ${
+                    className={`min-h-[40px] rounded-full px-3 py-2 text-xs font-semibold transition-colors cursor-pointer ${
                       categoryFilter === cat
-                        ? 'bg-[#7F1D1D] text-white dark:bg-amber-500 dark:text-stone-950'
-                        : 'bg-stone-100 text-stone-700 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700'
+                        ? 'bg-[#7F1D1D] text-white dark:bg-amber-400 dark:text-stone-950'
+                        : 'bg-[#F4F6F9] text-stone-700 hover:bg-stone-200/70 dark:bg-[#1E232D] dark:text-stone-300 dark:hover:bg-stone-700'
                     }`}
                   >
-                    {cat}
+                    {cat === 'Unsur' ? 'Wadah' : cat}
                   </button>
                 )
               )}
@@ -78,31 +78,31 @@ export const JadwalIbadahPage: React.FC = () => {
           </div>
 
           {categoryFilter === 'Unsur' && (
-            <div className="border-t border-stone-100 pt-4 dark:border-stone-800">
+            <div className="border-t border-stone-100 pt-4 dark:border-stone-800/80">
               <p className="text-xs font-semibold text-stone-500 dark:text-stone-400">
-                Filter Unsur Pelayanan
+                Filter Wadah Kategorial
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => setUnsurFilter('Semua')}
-                  className={`min-h-[36px] rounded-lg px-3 text-xs font-semibold cursor-pointer ${
+                  className={`min-h-[36px] rounded-full px-3 text-xs font-semibold cursor-pointer ${
                     unsurFilter === 'Semua'
-                      ? 'bg-amber-500 text-stone-950'
-                      : 'bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-300'
+                      ? 'bg-amber-400 text-stone-950'
+                      : 'bg-[#F4F6F9] text-stone-700 dark:bg-[#1E232D] dark:text-stone-300'
                   }`}
                 >
-                  Semua Unsur
+                  Semua Wadah
                 </button>
                 {UNSUR_LIST.map((u) => (
                   <button
                     key={u}
                     type="button"
                     onClick={() => setUnsurFilter(u)}
-                    className={`min-h-[36px] rounded-lg px-3 text-xs font-semibold cursor-pointer ${
+                    className={`min-h-[36px] rounded-full px-3 text-xs font-semibold cursor-pointer ${
                       unsurFilter === u
-                        ? 'bg-amber-500 text-stone-950'
-                        : 'bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-300'
+                        ? 'bg-amber-400 text-stone-950'
+                        : 'bg-[#F4F6F9] text-stone-700 dark:bg-[#1E232D] dark:text-stone-300'
                     }`}
                   >
                     {u}
@@ -113,7 +113,7 @@ export const JadwalIbadahPage: React.FC = () => {
           )}
 
           {categoryFilter === 'Sektor/Unit' && (
-            <div className="space-y-4 border-t border-stone-100 pt-4 dark:border-stone-800">
+            <div className="space-y-4 border-t border-stone-100 pt-4 dark:border-stone-800/80">
               <div>
                 <p className="text-xs font-semibold text-stone-500 dark:text-stone-400">
                   Pilih Sektor
@@ -124,10 +124,10 @@ export const JadwalIbadahPage: React.FC = () => {
                       key={sek}
                       type="button"
                       onClick={() => handleSelectSektor(sek)}
-                      className={`min-h-[40px] rounded-xl px-3 text-left text-xs font-semibold transition-colors cursor-pointer ${
+                      className={`min-h-[40px] rounded-2xl px-3.5 text-left text-xs font-semibold transition-colors cursor-pointer ${
                         sektorFilter === sek
-                          ? 'bg-amber-500 text-stone-950'
-                          : 'bg-stone-100 text-stone-700 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300'
+                          ? 'bg-amber-400 text-stone-950'
+                          : 'bg-[#F4F6F9] text-stone-700 hover:bg-stone-200/70 dark:bg-[#1E232D] dark:text-stone-300'
                       }`}
                     >
                       {sek === 'Semua' ? 'Semua Sektor' : sek}
@@ -145,10 +145,10 @@ export const JadwalIbadahPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setUnitFilter('Semua')}
-                      className={`min-h-[36px] rounded-lg px-3 text-xs font-semibold cursor-pointer ${
+                      className={`min-h-[36px] rounded-full px-3 text-xs font-semibold cursor-pointer ${
                         unitFilter === 'Semua'
                           ? 'bg-[#7F1D1D] text-white'
-                          : 'bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-300'
+                          : 'bg-[#F4F6F9] text-stone-700 dark:bg-[#1E232D] dark:text-stone-300'
                       }`}
                     >
                       Semua Unit
@@ -158,10 +158,10 @@ export const JadwalIbadahPage: React.FC = () => {
                         key={u}
                         type="button"
                         onClick={() => setUnitFilter(u)}
-                        className={`min-h-[36px] rounded-lg px-3 text-xs font-semibold cursor-pointer ${
+                        className={`min-h-[36px] rounded-full px-3 text-xs font-semibold cursor-pointer ${
                           unitFilter === u
                             ? 'bg-[#7F1D1D] text-white'
-                            : 'bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-300'
+                            : 'bg-[#F4F6F9] text-stone-700 dark:bg-[#1E232D] dark:text-stone-300'
                         }`}
                       >
                         {u}
@@ -173,15 +173,15 @@ export const JadwalIbadahPage: React.FC = () => {
             </div>
           )}
 
-          <div className="border-t border-stone-100 pt-4 text-xs text-stone-500 dark:border-stone-800 dark:text-stone-400">
+          <div className="border-t border-stone-100 pt-4 text-xs text-stone-500 dark:border-stone-800/80 dark:text-stone-400">
             Menampilkan <strong className="font-tabular text-stone-900 dark:text-stone-100">{filtered.length}</strong> jadwal ibadah.
           </div>
         </aside>
 
         {/* Right Content: Schedule List */}
-        <div className="space-y-4">
+        <div className="space-y-3.5">
           {filtered.length === 0 ? (
-            <div className="rounded-2xl border border-stone-200 bg-white p-8 text-center dark:border-stone-800 dark:bg-stone-900">
+            <div className="rounded-[24px] bg-white p-8 text-center shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22]">
               <p className="text-sm font-medium text-stone-600 dark:text-stone-300">
                 Belum ada jadwal untuk filter yang dipilih.
               </p>
@@ -194,7 +194,7 @@ export const JadwalIbadahPage: React.FC = () => {
               return (
                 <article
                   key={sch.id}
-                  className="rounded-2xl border border-stone-200 bg-white p-5 transition-colors hover:border-amber-500/50 dark:border-stone-800 dark:bg-stone-900"
+                  className="rounded-[24px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-colors dark:bg-[#161A22]"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="space-y-1.5">
@@ -209,11 +209,11 @@ export const JadwalIbadahPage: React.FC = () => {
                       </h2>
                       <div className="flex flex-wrap gap-x-4 gap-y-1.5 pt-1 text-sm text-stone-600 dark:text-stone-300">
                         <span className="inline-flex items-center gap-1.5">
-                          <CalendarDays className="h-4 w-4 text-amber-600" />
+                          <CalendarDays className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                           {sch.date}
                         </span>
                         <span className="inline-flex items-center gap-1.5 font-tabular">
-                          <Clock className="h-4 w-4 text-amber-600" />
+                          <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                           {sch.time}
                         </span>
                       </div>
@@ -239,10 +239,10 @@ export const JadwalIbadahPage: React.FC = () => {
                       href={mapsUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex min-h-[42px] items-center gap-2 rounded-xl border border-stone-200 bg-stone-50 px-4 py-2 text-xs font-semibold text-stone-800 transition-colors hover:border-amber-500 hover:bg-amber-50 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200 dark:hover:bg-stone-700 whitespace-nowrap shrink-0"
+                      className="inline-flex min-h-[42px] items-center gap-2 rounded-full bg-[#F4F6F9] px-4 py-2 text-xs font-semibold text-stone-800 transition-colors hover:bg-stone-200/70 dark:bg-[#1E232D] dark:text-stone-200 dark:hover:bg-stone-700 whitespace-nowrap shrink-0"
                     >
                       <MapPin className="h-4 w-4 text-[#7F1D1D] dark:text-amber-400" />
-                      <span>Petunjuk Arah Google Maps</span>
+                      <span>Buka Maps</span>
                       <ExternalLink className="h-3.5 w-3.5 opacity-60" />
                     </a>
                   </div>

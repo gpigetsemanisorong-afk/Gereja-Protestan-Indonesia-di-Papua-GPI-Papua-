@@ -34,10 +34,10 @@ export const ProfilKontakPage: React.FC = () => {
   )}`;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Identity Card */}
-      <section className="rounded-3xl border border-stone-200 bg-white p-6 dark:border-stone-800 dark:bg-stone-900 sm:p-8">
-        <div className="flex flex-wrap items-center gap-4 border-b border-stone-100 pb-6 dark:border-stone-800">
+      <section className="rounded-[24px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22] sm:p-8">
+        <div className="flex flex-wrap items-center gap-4 border-b border-stone-100 pb-6 dark:border-stone-800/80">
           <ChurchLogo size="lg" />
           <div>
             <p className="text-xs font-semibold text-[#7F1D1D] dark:text-amber-400">
@@ -81,7 +81,7 @@ export const ProfilKontakPage: React.FC = () => {
 
       {/* Rekening Persembahan & Lokasi Google Maps */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <section className="rounded-3xl border border-stone-200 bg-white p-6 dark:border-stone-800 dark:bg-stone-900">
+        <section className="rounded-[24px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22] sm:p-6">
           <h2 className="flex items-center gap-2 text-lg font-bold text-stone-900 dark:text-stone-100">
             <Landmark className="h-5 w-5 text-[#7F1D1D] dark:text-amber-400" />
             <span>Rekening Persembahan & Diakonia</span>
@@ -96,7 +96,7 @@ export const ProfilKontakPage: React.FC = () => {
               return (
                 <div
                   key={acc.accountNumber}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-stone-200 bg-stone-50 p-4 dark:border-stone-800 dark:bg-stone-800/60"
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-[#F4F6F9] p-4 dark:bg-[#1E232D]"
                 >
                   <div>
                     <p className="text-xs font-bold text-[#7F1D1D] dark:text-amber-400">
@@ -113,14 +113,14 @@ export const ProfilKontakPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handleCopyAccount(acc.accountNumber)}
-                    className={`inline-flex min-h-[40px] items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-colors cursor-pointer ${
+                    className={`inline-flex min-h-[40px] items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition-colors cursor-pointer ${
                       isCopied
                         ? 'bg-emerald-700 text-white'
-                        : 'border border-stone-300 bg-white text-stone-800 hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100'
+                        : 'bg-white text-stone-800 shadow-xs hover:bg-stone-100 dark:bg-[#161A22] dark:text-stone-100'
                     }`}
                   >
                     {isCopied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                    <span>{isCopied ? 'Tersalin' : 'Salin Rekening'}</span>
+                    <span>{isCopied ? 'Tersalin' : 'Salin'}</span>
                   </button>
                 </div>
               );
@@ -128,10 +128,10 @@ export const ProfilKontakPage: React.FC = () => {
           </div>
         </section>
 
-        <section className="flex flex-col justify-between rounded-3xl border border-stone-200 bg-white p-6 dark:border-stone-800 dark:bg-stone-900">
+        <section className="flex flex-col justify-between rounded-[24px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22] sm:p-6">
           <div>
             <h2 className="flex items-center gap-2 text-lg font-bold text-stone-900 dark:text-stone-100">
-              <MapPin className="h-5 w-5 text-amber-600" />
+              <MapPin className="h-5 w-5 text-amber-600 dark:text-amber-400" />
               <span>Lokasi & Kontak Sekretariat</span>
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-stone-600 dark:text-stone-300">
@@ -148,15 +148,15 @@ export const ProfilKontakPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="mt-6 flex flex-wrap gap-2.5">
             <a
               href={mapsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-[42px] items-center gap-2 rounded-xl bg-[#7F1D1D] px-4 py-2 text-xs font-semibold text-white hover:bg-[#68151B]"
+              className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-[#7F1D1D] px-5 py-2 text-xs font-semibold text-white hover:bg-[#68151B]"
             >
               <MapPin className="h-4 w-4" />
-              <span>Buka Lokasi di Google Maps</span>
+              <span>Buka Google Maps</span>
               <ExternalLink className="h-3.5 w-3.5" />
             </a>
 
@@ -164,10 +164,10 @@ export const ProfilKontakPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setRoute('dashboard')}
-                className="inline-flex min-h-[42px] items-center gap-2 rounded-xl border border-stone-300 px-4 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-50 dark:border-stone-700 dark:text-stone-200 dark:hover:bg-stone-800 cursor-pointer"
+                className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-[#F4F6F9] px-5 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-200/70 dark:bg-[#1E232D] dark:text-stone-200 cursor-pointer"
               >
                 <ShieldCheck className="h-4 w-4 text-[#7F1D1D] dark:text-amber-400" />
-                <span>Buka Dashboard Admin</span>
+                <span>Dashboard Majelis</span>
               </button>
             )}
           </div>
@@ -177,11 +177,11 @@ export const ProfilKontakPage: React.FC = () => {
       {/* Galeri Pelayanan */}
       <section className="space-y-4">
         <h2 className="text-xl font-bold text-stone-900 dark:text-stone-100">Galeri Pelayanan Jemaat</h2>
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           {data.gallery.map((item) => (
             <figure
               key={item.id}
-              className="overflow-hidden rounded-2xl border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900"
+              className="overflow-hidden rounded-[24px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22]"
             >
               {!failedImages[item.id] ? (
                 <img
@@ -192,7 +192,7 @@ export const ProfilKontakPage: React.FC = () => {
                   className="aspect-[4/3] w-full object-cover"
                 />
               ) : (
-                <div className="flex aspect-[4/3] w-full flex-col items-center justify-center bg-stone-100 p-4 text-center dark:bg-stone-800">
+                <div className="flex aspect-[4/3] w-full flex-col items-center justify-center bg-[#F4F6F9] p-4 text-center dark:bg-[#1E232D]">
                   <ImageIcon className="h-8 w-8 text-stone-400" />
                   <p className="mt-2 text-xs font-medium text-stone-500">{item.title}</p>
                 </div>

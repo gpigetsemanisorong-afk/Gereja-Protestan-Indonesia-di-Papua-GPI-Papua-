@@ -49,11 +49,11 @@ export const LiturgiUnsurPage: React.FC = () => {
       />
 
       {/* Wadah Kategorial Filter Bar */}
-      <div className="rounded-2xl border border-stone-200 bg-white p-3 dark:border-stone-800 dark:bg-stone-900">
+      <div className="rounded-[24px] bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22]">
         <p className="px-1 text-[11px] font-semibold uppercase tracking-wider text-stone-500 dark:text-stone-400">
           Pilih Wadah Kategorial
         </p>
-        <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="mt-2.5 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
           {UNSUR_META.map((u) => {
             const count = modelsByUnsur.get(u.id)?.length || 0;
             const active = selectedUnsur === u.id;
@@ -66,10 +66,10 @@ export const LiturgiUnsurPage: React.FC = () => {
                   const first = modelsByUnsur.get(u.id)?.[0];
                   setSelectedModelId(first?.id || '');
                 }}
-                className={`flex min-h-[58px] flex-col justify-between rounded-xl border p-3 text-left transition-colors cursor-pointer ${
+                className={`flex min-h-[58px] flex-col justify-between rounded-2xl p-3 text-left transition-colors cursor-pointer ${
                   active
-                    ? 'border-[#7F1D1D] bg-[#7F1D1D] text-white dark:border-amber-500 dark:bg-amber-500 dark:text-stone-950'
-                    : 'border-stone-200 bg-stone-50/70 text-stone-800 hover:border-amber-500/60 hover:bg-amber-50/40 dark:border-stone-800 dark:bg-stone-800/60 dark:text-stone-200'
+                    ? 'bg-[#7F1D1D] text-white dark:bg-amber-400 dark:text-stone-950'
+                    : 'bg-[#F4F6F9] text-stone-800 hover:bg-stone-200/70 dark:bg-[#1E232D] dark:text-stone-200 dark:hover:bg-stone-700'
                 }`}
               >
                 <div className="flex items-center justify-between gap-2">
@@ -100,10 +100,10 @@ export const LiturgiUnsurPage: React.FC = () => {
       </div>
 
       {/* Split-Screen on Desktop: Left = Models (Model A, B, C, D...), Right = Full Liturgy */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[330px_1fr] lg:items-start">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr] lg:items-start">
         {/* Left Panel: Model Selector */}
-        <aside className="rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900 lg:sticky lg:top-20">
-          <div className="border-b border-stone-100 pb-3 dark:border-stone-800">
+        <aside className="rounded-[24px] bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22] lg:sticky lg:top-20">
+          <div className="border-b border-stone-100 pb-3 dark:border-stone-800/80">
             <p className="flex items-center gap-1.5 text-xs font-bold text-[#7F1D1D] dark:text-amber-400">
               <Layers className="h-3.5 w-3.5" />
               <span>Pilihan Model Liturgi {activeUnsurInfo.label}</span>
@@ -115,7 +115,7 @@ export const LiturgiUnsurPage: React.FC = () => {
 
           {currentModels.length === 0 ? (
             <p className="py-6 text-center text-xs text-stone-500 dark:text-stone-400">
-              Belum ada model liturgi untuk unsur {activeUnsurInfo.label}.
+              Belum ada model liturgi untuk wadah {activeUnsurInfo.label}.
             </p>
           ) : (
             <div className="mt-3 space-y-2">
@@ -126,17 +126,17 @@ export const LiturgiUnsurPage: React.FC = () => {
                     key={model.id}
                     type="button"
                     onClick={() => setSelectedModelId(model.id)}
-                    className={`w-full rounded-xl border p-3.5 text-left transition-colors cursor-pointer ${
+                    className={`w-full rounded-2xl p-3.5 text-left transition-colors cursor-pointer ${
                       isSelected
-                        ? 'border-[#7F1D1D] bg-amber-50/70 dark:border-amber-500 dark:bg-amber-950/25'
-                        : 'border-stone-200 bg-stone-50/40 hover:bg-stone-50 dark:border-stone-800 dark:bg-stone-800/40 dark:hover:bg-stone-800/70'
+                        ? 'bg-[#7F1D1D]/10 ring-1 ring-[#7F1D1D]/30 dark:bg-amber-400/15 dark:ring-amber-400/40'
+                        : 'bg-[#F4F6F9] hover:bg-stone-200/60 dark:bg-[#1E232D] dark:hover:bg-stone-700/70'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span
                         className={`text-xs font-bold uppercase tracking-wide ${
                           isSelected
-                            ? 'text-[#7F1D1D] dark:text-amber-400'
+                            ? 'text-[#7F1D1D] dark:text-amber-300'
                             : 'text-stone-700 dark:text-stone-300'
                         }`}
                       >
@@ -160,10 +160,10 @@ export const LiturgiUnsurPage: React.FC = () => {
         </aside>
 
         {/* Right Panel: Selected Model Liturgy Content */}
-        <article className="rounded-3xl border border-stone-200 bg-white p-6 dark:border-stone-800 dark:bg-stone-900 sm:p-8">
+        <article className="rounded-[24px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22] sm:p-8">
           {activeModel ? (
             <div>
-              <div className="flex flex-wrap items-start justify-between gap-4 border-b border-stone-100 pb-6 dark:border-stone-800">
+              <div className="flex flex-wrap items-start justify-between gap-4 border-b border-stone-100 pb-6 dark:border-stone-800/80">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wider text-[#7F1D1D] dark:text-amber-400">
                     {activeUnsurInfo.label} · {activeModel.modelCode}
@@ -176,7 +176,7 @@ export const LiturgiUnsurPage: React.FC = () => {
                   </p>
                   <div className="mt-3 space-y-1 text-xs text-stone-600 dark:text-stone-300">
                     <p className="flex items-start gap-1.5">
-                      <BookOpen className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" />
+                      <BookOpen className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
                       <span>
                         Tema Pelayanan: <strong>{activeModel.theme}</strong>
                       </span>
@@ -193,14 +193,14 @@ export const LiturgiUnsurPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => window.print()}
-                  className="inline-flex min-h-[40px] items-center gap-2 rounded-xl border border-stone-200 px-3.5 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-50 dark:border-stone-700 dark:text-stone-200 dark:hover:bg-stone-800 print:hidden cursor-pointer"
+                  className="inline-flex min-h-[40px] items-center gap-2 rounded-full bg-[#F4F6F9] px-4 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-200/70 dark:bg-[#1E232D] dark:text-stone-200 dark:hover:bg-stone-700 print:hidden cursor-pointer"
                 >
                   <Printer className="h-4 w-4" />
                   <span>Cetak Liturgi</span>
                 </button>
               </div>
 
-              <ol className="mt-6 space-y-8">
+              <ol className="mt-6 space-y-7">
                 {activeModel.steps
                   .slice()
                   .sort((a, b) => a.order - b.order)
@@ -212,7 +212,7 @@ export const LiturgiUnsurPage: React.FC = () => {
                     return (
                       <li
                         key={step.id}
-                        className="border-b border-stone-100 pb-7 last:border-b-0 last:pb-0 dark:border-stone-800"
+                        className="border-b border-stone-100 pb-7 last:border-b-0 last:pb-0 dark:border-stone-800/80"
                       >
                         <div className="flex items-baseline gap-2.5">
                           <span className="font-tabular text-xs font-bold text-[#7F1D1D] dark:text-amber-400">
@@ -240,7 +240,7 @@ export const LiturgiUnsurPage: React.FC = () => {
                           )}
 
                           {step.congregationText && (
-                            <p className="rounded-xl bg-stone-50 p-3.5 text-stone-900 dark:bg-stone-800/70 dark:text-stone-100">
+                            <p className="rounded-2xl bg-[#F4F6F9] p-4 text-stone-900 dark:bg-[#1E232D] dark:text-stone-100">
                               <span className="mr-2 font-sans text-xs font-bold uppercase tracking-wide text-amber-700 dark:text-amber-300">
                                 Peserta / Jemaat:
                               </span>
@@ -250,7 +250,7 @@ export const LiturgiUnsurPage: React.FC = () => {
                         </div>
 
                         {step.hymnRef && (
-                          <div className="mt-4 rounded-2xl border border-amber-200/80 bg-amber-50/60 p-4 dark:border-amber-900/40 dark:bg-amber-950/20">
+                          <div className="mt-4 rounded-2xl bg-amber-50/75 p-4 dark:bg-amber-950/25">
                             <div className="flex flex-wrap items-center justify-between gap-2">
                               <div className="flex items-center gap-2 text-sm font-bold text-[#7F1D1D] dark:text-amber-300">
                                 <Music className="h-4 w-4" />
@@ -276,7 +276,7 @@ export const LiturgiUnsurPage: React.FC = () => {
                                   </div>
                                 ))}
                                 {linkedHymn.chorus && (
-                                  <div className="rounded-xl bg-white/80 p-3 dark:bg-stone-900/70">
+                                  <div className="rounded-xl bg-white/80 p-3 dark:bg-[#161A22]/80">
                                     <p className="font-sans text-[11px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
                                       Refrein
                                     </p>

@@ -3,44 +3,40 @@ import {
   Bookmark,
   BookOpen,
   Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Copy,
-  Database,
-  Download,
   Pencil,
   RefreshCw,
   Search,
   Share2,
   Trash2,
-  WifiOff,
   X,
 } from 'lucide-react';
 import { usePortal } from '../context/PortalContext';
-import { ReadingToolbar } from '../components/Navbar';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { ShareSheetModal } from '../components/ShareSheetModal';
+import {
+  getVersePericopeTitle,
+  resolveActivePericopeTitle,
+} from '../data/biblePericopes';
 import { useBibleDatabase } from '../hooks/useBibleDatabase';
 import { BibleBookmark, useBibleBookmarks } from '../hooks/useBibleBookmarks';
 import { buildBibleVerseSharePayload, SharePayload, triggerWebShare } from '../utils/shareUtils';
 
 export const AlkitabPage: React.FC = () => {
-  const { data, readingTextClass, logActivity } = usePortal();
+  const { data, readingTextClass } = usePortal();
   const {
     books,
     currentBookMeta,
     selectedBookId,
     selectedChapter,
     chapterData,
-    cachedChapters,
     loadingChapter,
     chapterError,
     isFromOfflineDb,
     isOnline,
-    dbStats,
-    isDownloadingFull,
-    downloadProgress,
-    downloadError,
     searchResults,
     isSearchingDb,
     hasPrevChapter,
@@ -50,7 +46,6 @@ export const AlkitabPage: React.FC = () => {
     goToPrevChapter,
     goToNextChapter,
     refreshCurrentChapter,
-    downloadFullOffline,
     runOfflineSearch,
   } = useBibleDatabase();
 
@@ -64,8 +59,10 @@ export const AlkitabPage: React.FC = () => {
   } = useBibleBookmarks();
 
   const [sidebarMode, setSidebarMode] = useState<'navigator' | 'bookmarks'>('navigator');
-  const [testament, setTestament] = useState<'Semua' | 'PL' | 'PB'>('Semua');
+  const [openDropdown, setOpenDropdown] = useState<'PL' | 'PB' | null>(null);
   const [bookQuery, setBookQuery] = useState('');
+  const [chapterInput, setChapterInput] = useState(String(selectedChapter));
+  const [verseFilterInput, setVerseFilterInput] = useState('');
   const [searchMode, setSearchMode] = useState<'chapter' | 'offline-db'>('chapter');
   const [verseQuery, setVerseQuery] = useState('');
 
@@ -81,6 +78,7 @@ export const AlkitabPage: React.FC = () => {
 
   const articleRef = useRef<HTMLElement | null>(null);
   const sidebarRef = useRef<HTMLElement | null>(null);
+  const dropdownContainerRef = useRef<HTMLDivElement | null>(null);
   const verseRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
   const showToast = (msg: string) => {
@@ -89,6 +87,26 @@ export const AlkitabPage: React.FC = () => {
       setToastMsg((curr) => (curr === msg ? null : curr));
     }, 3000);
   };
+
+  // Close PL/PB dropdown when clicking outside
+  useEffect(() => {
+    if (!openDropdown) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        dropdownContainerRef.current &&
+        !dropdownContainerRef.current.contains(e.target as Node)
+      ) {
+        setOpenDropdown(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [openDropdown]);
+
+  // Keep chapterInput synchronized when selectedChapter changes externally
+  useEffect(() => {
+    setChapterInput(String(selectedChapter));
+  }, [selectedBookId, selectedChapter]);
 
   // Scroll to highlighted verse once chapter data finishes loading
   useEffect(() => {
@@ -101,30 +119,141 @@ export const AlkitabPage: React.FC = () => {
     return () => window.clearTimeout(timer);
   }, [chapterData, highlightedVerse, loadingChapter]);
 
-  const filteredBooks = useMemo(() => {
+  const dropdownBooks = useMemo(() => {
+    if (!openDropdown) return [];
     const q = bookQuery.trim().toLowerCase();
     return books.filter((b) => {
-      const matchesTestament = testament === 'Semua' || b.testament === testament;
-      if (!matchesTestament) return false;
+      if (b.testament !== openDropdown) return false;
       if (!q) return true;
       return b.name.toLowerCase().includes(q) || b.abbr.toLowerCase().includes(q);
     });
-  }, [bookQuery, books, testament]);
+  }, [bookQuery, books, openDropdown]);
 
-  const chapterNumbers = useMemo(
-    () => Array.from({ length: currentBookMeta.chaptersCount }, (_, idx) => idx + 1),
-    [currentBookMeta.chaptersCount]
-  );
+  const parsedVerseHighlight = useMemo(() => {
+    const raw = verseFilterInput.trim();
+    if (!raw) {
+      return {
+        mode: 'none' as const,
+        ranges: [] as Array<[number, number]>,
+        label: '',
+        error: null as string | null,
+      };
+    }
 
+    const parts = raw
+      .split(',')
+      .map((p) => p.trim())
+      .filter(Boolean);
+
+    if (parts.length === 0) {
+      return {
+        mode: 'none' as const,
+        ranges: [] as Array<[number, number]>,
+        label: '',
+        error: null as string | null,
+      };
+    }
+
+    const ranges: Array<[number, number]> = [];
+    for (const part of parts) {
+      const rangeMatch = part.match(/^(\d+)\s*(?:-|–|—|s\/?d|sampai)\s*(\d+)$/i);
+      if (rangeMatch) {
+        const start = Number(rangeMatch[1]);
+        const end = Number(rangeMatch[2]);
+        if (start >= 1 && end >= 1) {
+          ranges.push([Math.min(start, end), Math.max(start, end)]);
+          continue;
+        }
+      }
+
+      // Allow incomplete trailing range separator while user is still typing (e.g. "9 - ")
+      const pendingRangeMatch = part.match(/^(\d+)\s*(?:-|–|—|s\/?d|sampai)\s*$/i);
+      if (pendingRangeMatch) {
+        const num = Number(pendingRangeMatch[1]);
+        if (num >= 1) {
+          ranges.push([num, num]);
+          continue;
+        }
+      }
+
+      const singleMatch = part.match(/^(\d+)$/);
+      if (singleMatch) {
+        const num = Number(singleMatch[1]);
+        if (num >= 1) {
+          ranges.push([num, num]);
+          continue;
+        }
+      }
+
+      return {
+        mode: 'invalid' as const,
+        ranges: [] as Array<[number, number]>,
+        label: '',
+        error: 'Format ayat belum sesuai. Contoh: 9 atau 9 - 35',
+      };
+    }
+
+    const label = ranges
+      .map(([start, end]) => (start === end ? `${start}` : `${start} - ${end}`))
+      .join(', ');
+
+    return {
+      mode: 'highlighted' as const,
+      ranges,
+      label,
+      error: null as string | null,
+    };
+  }, [verseFilterInput]);
+
+  const firstHighlightedRangeVerse = useMemo(() => {
+    if (parsedVerseHighlight.mode !== 'highlighted' || parsedVerseHighlight.ranges.length === 0) {
+      return null;
+    }
+    return parsedVerseHighlight.ranges[0][0];
+  }, [parsedVerseHighlight]);
+
+  // Smoothly scroll to the first typed verse when highlight input or chapter changes
+  useEffect(() => {
+    if (firstHighlightedRangeVerse === null || loadingChapter || !chapterData) return;
+    const target = verseRefs.current[firstHighlightedRangeVerse];
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [chapterData, firstHighlightedRangeVerse, loadingChapter]);
+
+  const hasMatchingHighlightedVerse = useMemo(() => {
+    if (parsedVerseHighlight.mode !== 'highlighted' || !chapterData) return true;
+    return chapterData.verses.some((v) =>
+      parsedVerseHighlight.ranges.some(([start, end]) => v.verse >= start && v.verse <= end)
+    );
+  }, [chapterData, parsedVerseHighlight]);
+
+  const activeHeaderPericope = useMemo(() => {
+    const targetVerse = firstHighlightedRangeVerse ?? highlightedVerse ?? 1;
+    return resolveActivePericopeTitle(
+      currentBookMeta.bookId,
+      selectedChapter,
+      targetVerse
+    );
+  }, [currentBookMeta.bookId, firstHighlightedRangeVerse, highlightedVerse, selectedChapter]);
+
+  // Keep ALL verses of the selected book & chapter visible (only filter if searching keyword in "Cari Ayat")
   const visibleVerses = useMemo(() => {
     const verses = chapterData?.verses || [];
     if (searchMode !== 'chapter') return verses;
     const q = verseQuery.trim().toLowerCase();
     if (!q) return verses;
     return verses.filter(
-      (v) => v.text.toLowerCase().includes(q) || String(v.verse) === q
+      (v) =>
+        v.text.toLowerCase().includes(q) ||
+        String(v.verse) === q ||
+        Boolean(
+          (v.title || getVersePericopeTitle(currentBookMeta.bookId, selectedChapter, v.verse))
+            ?.toLowerCase()
+            .includes(q)
+        )
     );
-  }, [chapterData, searchMode, verseQuery]);
+  }, [chapterData, currentBookMeta.bookId, searchMode, selectedChapter, verseQuery]);
 
   const filteredBookmarks = useMemo(() => {
     const q = bookmarkQuery.trim().toLowerCase();
@@ -138,21 +267,10 @@ export const AlkitabPage: React.FC = () => {
     );
   }, [bookmarkQuery, bookmarks]);
 
-  const handleDownloadFullBible = async () => {
-    const result = await downloadFullOffline();
-    if (result) {
-      logActivity({
-        category: 'Sinkronisasi',
-        action: 'Unduh Database Alkitab Offline (66 Kitab)',
-        detail: `${result.chaptersSaved} pasal (${result.versesSaved.toLocaleString('id-ID')} ayat) disimpan ke IndexedDB lokal.`,
-      });
-    }
-  };
-
   const handleDbSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchMode === 'offline-db') {
-      void runOfflineSearch(verseQuery, testament);
+      void runOfflineSearch(verseQuery, 'Semua');
     }
   };
 
@@ -207,26 +325,42 @@ export const AlkitabPage: React.FC = () => {
   const handleOpenBookmark = (b: BibleBookmark) => {
     setSearchMode('chapter');
     setVerseQuery('');
+    setVerseFilterInput('');
     setHighlightedVerse(b.verse);
     selectBook(b.bookId, b.chapter);
     scrollToArticle();
   };
 
-  const coveragePercent = Math.min(
-    100,
-    Math.round((dbStats.fullChaptersCount / dbStats.totalCanonicalChapters) * 100)
-  );
+  const handleChapterInputChange = (raw: string) => {
+    const digitsOnly = raw.replace(/\D/g, '');
+    setChapterInput(digitsOnly);
+    if (!digitsOnly) return;
+    const parsed = Number(digitsOnly);
+    if (parsed >= 1 && parsed <= currentBookMeta.chaptersCount) {
+      setHighlightedVerse(null);
+      selectChapter(parsed);
+    }
+  };
+
+  const handleChapterInputCommit = () => {
+    const parsed = Number(chapterInput);
+    if (!chapterInput || Number.isNaN(parsed) || parsed < 1) {
+      setChapterInput(String(selectedChapter));
+      return;
+    }
+    const clamped = Math.min(Math.max(1, parsed), currentBookMeta.chaptersCount);
+    setChapterInput(String(clamped));
+    if (clamped !== selectedChapter) {
+      setHighlightedVerse(null);
+      selectChapter(clamped);
+    }
+  };
 
   return (
     <div className="space-y-5">
-      <ReadingToolbar
-        title="Alkitab Terjemahan Baru (TB)"
-        subtitle={`${currentBookMeta.name} Pasal ${selectedChapter}`}
-      />
-
       {/* Toast Notification for Bookmark / Copy Actions */}
       {toastMsg && (
-        <div className="flex items-center justify-between gap-2 rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-xs font-semibold text-amber-950 dark:border-amber-800/60 dark:bg-amber-950/40 dark:text-amber-200">
+        <div className="flex items-center justify-between gap-2 rounded-2xl bg-amber-50 px-4 py-3 text-xs font-semibold text-amber-950 dark:bg-amber-950/40 dark:text-amber-200">
           <div className="flex items-center gap-2">
             <Bookmark className="h-4 w-4 shrink-0 fill-current text-amber-600 dark:text-amber-400" />
             <span>{toastMsg}</span>
@@ -242,247 +376,282 @@ export const AlkitabPage: React.FC = () => {
         </div>
       )}
 
-      {/* Offline Database Status & 66-Book Sync Bar */}
-      <section className="rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#7F1D1D]/10 text-[#7F1D1D] dark:bg-amber-500/15 dark:text-amber-400">
-              <Database className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="text-xs font-bold text-stone-900 dark:text-stone-100">
-                  Database Alkitab Offline (66 Kitab · {dbStats.totalCanonicalChapters.toLocaleString('id-ID')} Pasal)
-                </p>
-                {!isOnline && (
-                  <span className="inline-flex items-center gap-1 rounded-md bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-900 dark:bg-amber-950/60 dark:text-amber-300">
-                    <WifiOff className="h-3 w-3" />
-                    Offline
-                  </span>
-                )}
-              </div>
-              <p className="mt-0.5 text-xs text-stone-600 dark:text-stone-400">
-                {dbStats.isFullOfflineReady ? (
-                  <>
-                    Lengkap tersimpan di perangkat (
-                    <strong className="font-tabular text-emerald-700 dark:text-emerald-400">
-                      {dbStats.cachedChaptersCount.toLocaleString('id-ID')} pasal
-                    </strong>
-                    ) — siap dibaca & dicari tanpa koneksi internet.
-                  </>
-                ) : (
-                  <>
-                    Tersimpan lokal:{' '}
-                    <strong className="font-tabular">
-                      {dbStats.cachedChaptersCount.toLocaleString('id-ID')}
-                    </strong>{' '}
-                    pasal ({coveragePercent}% lengkap). Pasal yang dibuka otomatis tersimpan ke database offline.
-                  </>
-                )}
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            disabled={isDownloadingFull || !isOnline}
-            onClick={handleDownloadFullBible}
-            className="inline-flex min-h-[40px] items-center gap-2 rounded-xl bg-[#7F1D1D] px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#68151B] disabled:opacity-50 dark:bg-amber-500 dark:text-stone-950 dark:hover:bg-amber-400 cursor-pointer"
-          >
-            <Download className={`h-4 w-4 ${isDownloadingFull ? 'animate-bounce' : ''}`} />
-            <span>
-              {isDownloadingFull
-                ? 'Mengunduh Database...'
-                : dbStats.isFullOfflineReady
-                ? 'Perbarui Database Offline'
-                : 'Unduh 66 Kitab Offline (~7,5 MB)'}
-            </span>
-          </button>
-        </div>
-
-        {downloadProgress && (
-          <div className="mt-3 space-y-1.5 border-t border-stone-100 pt-3 dark:border-stone-800">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-medium text-stone-700 dark:text-stone-300">
-                {downloadProgress.detail}
-              </span>
-              <span className="font-tabular font-bold text-[#7F1D1D] dark:text-amber-400">
-                {downloadProgress.percent}%
-              </span>
-            </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-stone-100 dark:bg-stone-800">
-              <div
-                className="h-full rounded-full bg-[#7F1D1D] transition-all duration-300 dark:bg-amber-500"
-                style={{ width: `${downloadProgress.percent}%` }}
-              />
-            </div>
-          </div>
-        )}
-
-        {downloadError && (
-          <p className="mt-2 text-xs font-medium text-red-600 dark:text-red-400">
-            {downloadError}
-          </p>
-        )}
-      </section>
-
       {/* Split-screen on desktop */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[350px_1fr] lg:items-start">
         {/* Left Panel: Kitab/Pasal Selector OR Saved Bookmarks */}
         <aside
           ref={sidebarRef}
-          className="space-y-4 rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900 lg:sticky lg:top-20"
+          className="space-y-4 rounded-[24px] bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22] lg:sticky lg:top-20"
         >
           {/* Sidebar Mode Switcher */}
-          <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-stone-100 p-1 dark:bg-stone-800">
+          <div className="grid grid-cols-2 gap-1 rounded-full bg-[#F4F6F9] p-1 dark:bg-[#1E232D]">
             <button
               type="button"
               onClick={() => setSidebarMode('navigator')}
-              className={`inline-flex min-h-[38px] items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-semibold transition-colors cursor-pointer ${
+              className={`inline-flex min-h-[38px] items-center justify-center gap-1.5 rounded-full px-2 text-xs font-semibold transition-colors cursor-pointer ${
                 sidebarMode === 'navigator'
-                  ? 'bg-white text-[#7F1D1D] shadow-xs dark:bg-stone-900 dark:text-amber-400'
+                  ? 'bg-white text-[#7F1D1D] shadow-xs dark:bg-[#161A22] dark:text-amber-300'
                   : 'text-stone-600 dark:text-stone-300'
               }`}
             >
               <BookOpen className="h-3.5 w-3.5" />
-              <span>Kitab & Pasal</span>
+              <span>Kitab & Ayat</span>
             </button>
             <button
               type="button"
               onClick={() => setSidebarMode('bookmarks')}
-              className={`inline-flex min-h-[38px] items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-semibold transition-colors cursor-pointer ${
+              className={`inline-flex min-h-[38px] items-center justify-center gap-1.5 rounded-full px-2 text-xs font-semibold transition-colors cursor-pointer ${
                 sidebarMode === 'bookmarks'
-                  ? 'bg-white text-[#7F1D1D] shadow-xs dark:bg-stone-900 dark:text-amber-400'
+                  ? 'bg-white text-[#7F1D1D] shadow-xs dark:bg-[#161A22] dark:text-amber-300'
                   : 'text-stone-600 dark:text-stone-300'
               }`}
             >
               <Bookmark className="h-3.5 w-3.5" />
-              <span>Ayat Favorit</span>
-              <span className="font-tabular rounded-md bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold text-[#7F1D1D] dark:text-amber-300">
-                {bookmarks.length}
-              </span>
+              <span>Favorit ({bookmarks.length})</span>
             </button>
           </div>
 
           {sidebarMode === 'navigator' ? (
             <>
-              {/* Testament Filter */}
-              <div className="grid grid-cols-3 gap-1.5 rounded-xl bg-stone-100 p-1 dark:bg-stone-800">
-                {[
-                  { id: 'Semua', label: 'Semua (66)' },
-                  { id: 'PL', label: 'PL (39)' },
-                  { id: 'PB', label: 'PB (27)' },
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => {
-                      const t = tab.id as 'Semua' | 'PL' | 'PB';
-                      setTestament(t);
-                      const first = books.find((b) => t === 'Semua' || b.testament === t);
-                      if (first && currentBookMeta.testament !== t && t !== 'Semua') {
-                        selectBook(first.bookId, 1);
-                      }
-                    }}
-                    className={`min-h-[36px] rounded-lg px-2 text-xs font-semibold transition-colors cursor-pointer ${
-                      testament === tab.id
-                        ? 'bg-white text-[#7F1D1D] shadow-xs dark:bg-stone-900 dark:text-amber-400'
-                        : 'text-stone-600 dark:text-stone-300'
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Book Selector */}
-              <div>
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-xs font-semibold text-stone-500 dark:text-stone-400">
-                    Pilih Kitab ({filteredBooks.length})
-                  </p>
-                  <input
-                    type="text"
-                    value={bookQuery}
-                    onChange={(e) => setBookQuery(e.target.value)}
-                    placeholder="Filter kitab..."
-                    className="w-36 rounded-lg border border-stone-200 bg-stone-50 px-2.5 py-1 text-xs text-stone-900 placeholder:text-stone-400 focus:border-[#7F1D1D] focus:outline-none dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100"
-                  />
-                </div>
-                <div className="mt-2 grid max-h-[230px] grid-cols-2 gap-1.5 overflow-y-auto pr-1">
-                  {filteredBooks.map((book) => (
-                    <button
-                      key={book.bookId}
-                      type="button"
-                      onClick={() => selectBook(book.bookId, 1)}
-                      className={`min-h-[38px] truncate rounded-xl px-2.5 text-left text-xs font-semibold transition-colors cursor-pointer ${
-                        selectedBookId === book.bookId
-                          ? 'bg-[#7F1D1D] text-white dark:bg-amber-500 dark:text-stone-950'
-                          : 'bg-stone-50 text-stone-700 hover:bg-stone-100 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700'
-                      }`}
-                      title={`${book.name} (${book.chaptersCount} pasal)`}
-                    >
-                      {book.name}
-                    </button>
-                  ))}
-                  {filteredBooks.length === 0 && (
-                    <p className="col-span-2 py-4 text-center text-xs text-stone-500">
-                      Kitab "{bookQuery}" tidak ditemukan.
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Chapter Selector */}
-              <div className="border-t border-stone-100 pt-3 dark:border-stone-800">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-xs font-semibold text-stone-500 dark:text-stone-400">
-                    Pilih Pasal ({currentBookMeta.chaptersCount})
-                  </p>
-                  <span className="font-tabular text-[11px] text-emerald-700 dark:text-emerald-400">
-                    {cachedChapters.size} tersimpan offline
-                  </span>
-                </div>
-                <div className="mt-2 grid max-h-[190px] grid-cols-5 gap-1.5 overflow-y-auto pr-1">
-                  {chapterNumbers.map((chNum) => {
-                    const isActive = selectedChapter === chNum;
-                    const isCached = cachedChapters.has(chNum);
+              {/* PL (39) & PB (27) Dropdown Selectors */}
+              <div ref={dropdownContainerRef} className="relative">
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: 'PL' as const, label: 'PL (39)', fullLabel: 'Perjanjian Lama' },
+                    { id: 'PB' as const, label: 'PB (27)', fullLabel: 'Perjanjian Baru' },
+                  ].map((tab) => {
+                    const isOpen = openDropdown === tab.id;
+                    const isCurrentTestament = currentBookMeta.testament === tab.id;
                     return (
                       <button
-                        key={chNum}
+                        key={tab.id}
                         type="button"
                         onClick={() => {
-                          selectChapter(chNum);
-                          scrollToArticle();
+                          setBookQuery('');
+                          setOpenDropdown((prev) => (prev === tab.id ? null : tab.id));
                         }}
-                        className={`font-tabular relative min-h-[36px] rounded-lg px-2 text-xs font-bold transition-colors cursor-pointer ${
-                          isActive
-                            ? 'bg-amber-500 text-stone-950'
-                            : isCached
-                            ? 'border border-emerald-300/70 bg-emerald-50/70 text-stone-800 hover:bg-emerald-100 dark:border-emerald-800/70 dark:bg-emerald-950/30 dark:text-stone-200'
-                            : 'bg-stone-100 text-stone-600 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300'
+                        aria-expanded={isOpen}
+                        className={`inline-flex min-h-[42px] items-center justify-between gap-2 rounded-full px-4 text-xs font-bold transition-colors cursor-pointer ${
+                          isOpen || isCurrentTestament
+                            ? 'bg-[#7F1D1D] text-white dark:bg-amber-400 dark:text-stone-950'
+                            : 'bg-[#F4F6F9] text-stone-700 hover:bg-stone-200/70 dark:bg-[#1E232D] dark:text-stone-200 dark:hover:bg-stone-700'
                         }`}
+                        title={`Pilih kitab ${tab.fullLabel}`}
                       >
-                        {chNum}
+                        <span>{tab.label}</span>
+                        <ChevronDown
+                          className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                        />
                       </button>
                     );
                   })}
                 </div>
+
+                {/* Dropdown Panel */}
+                {openDropdown && (
+                  <div className="mt-2 rounded-2xl bg-[#F4F6F9] p-3 shadow-lg ring-1 ring-stone-200/80 dark:bg-[#1E232D] dark:ring-stone-700/70">
+                    <div className="flex items-center justify-between gap-2 pb-2">
+                      <p className="text-xs font-bold text-[#7F1D1D] dark:text-amber-300">
+                        {openDropdown === 'PL' ? 'Kitab Perjanjian Lama (39)' : 'Kitab Perjanjian Baru (27)'}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setOpenDropdown(null)}
+                        className="rounded-full p-1 text-stone-500 hover:bg-stone-200 dark:text-stone-300 dark:hover:bg-stone-700 cursor-pointer"
+                        aria-label="Tutup daftar kitab"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+
+                    <div className="relative mb-2.5">
+                      <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-stone-400" />
+                      <input
+                        type="text"
+                        value={bookQuery}
+                        onChange={(e) => setBookQuery(e.target.value)}
+                        placeholder={`Cari kitab ${openDropdown}...`}
+                        className="w-full rounded-full bg-white py-1.5 pl-8 pr-3 text-xs text-stone-900 placeholder:text-stone-400 focus:ring-2 focus:ring-[#7F1D1D]/30 focus:outline-none dark:bg-[#161A22] dark:text-stone-100"
+                      />
+                    </div>
+
+                    <div className="grid max-h-[240px] grid-cols-2 gap-1.5 overflow-y-auto pr-1">
+                      {dropdownBooks.map((book) => (
+                        <button
+                          key={book.bookId}
+                          type="button"
+                          onClick={() => {
+                            selectBook(book.bookId, 1);
+                            setChapterInput('1');
+                            setVerseFilterInput('');
+                            setHighlightedVerse(null);
+                            setOpenDropdown(null);
+                            setBookQuery('');
+                          }}
+                          className={`min-h-[38px] truncate rounded-xl px-2.5 text-left text-xs font-semibold transition-colors cursor-pointer ${
+                            selectedBookId === book.bookId
+                              ? 'bg-[#7F1D1D] text-white dark:bg-amber-400 dark:text-stone-950'
+                              : 'bg-white text-stone-700 hover:bg-stone-100 dark:bg-[#161A22] dark:text-stone-200 dark:hover:bg-stone-800'
+                          }`}
+                          title={`${book.name} (${book.chaptersCount} pasal)`}
+                        >
+                          {book.name}
+                        </button>
+                      ))}
+                      {dropdownBooks.length === 0 && (
+                        <p className="col-span-2 py-4 text-center text-xs text-stone-500">
+                          Kitab "{bookQuery}" tidak ditemukan.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Active Book Badge */}
+              <div className="flex items-center justify-between rounded-2xl bg-[#F4F6F9] px-3.5 py-2.5 dark:bg-[#1E232D]">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-medium text-stone-500 dark:text-stone-400">
+                    {currentBookMeta.testament === 'PL' ? 'Perjanjian Lama' : 'Perjanjian Baru'}
+                  </p>
+                  <p className="truncate text-sm font-bold text-stone-900 dark:text-stone-100">
+                    {currentBookMeta.name}
+                  </p>
+                </div>
+                <span className="font-tabular shrink-0 rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-[#7F1D1D] dark:bg-[#161A22] dark:text-amber-300">
+                  {currentBookMeta.chaptersCount} Pasal
+                </span>
+              </div>
+
+              {/* Typed Pasal & Ayat Inputs */}
+              <div className="space-y-3 border-t border-stone-100 pt-3 dark:border-stone-800/80">
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div>
+                    <label
+                      htmlFor="alkitab-pasal-input"
+                      className="mb-1 block text-xs font-semibold text-stone-600 dark:text-stone-300"
+                    >
+                      Pasal <span className="font-tabular text-[11px] font-normal text-stone-400">(1–{currentBookMeta.chaptersCount})</span>
+                    </label>
+                    <input
+                      id="alkitab-pasal-input"
+                      type="text"
+                      inputMode="numeric"
+                      value={chapterInput}
+                      onChange={(e) => handleChapterInputChange(e.target.value)}
+                      onBlur={handleChapterInputCommit}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleChapterInputCommit();
+                          scrollToArticle();
+                        }
+                      }}
+                      placeholder="1"
+                      className="font-tabular w-full rounded-2xl bg-[#F4F6F9] px-3.5 py-2.5 text-sm font-bold text-stone-900 placeholder:font-normal placeholder:text-stone-400 focus:ring-2 focus:ring-[#7F1D1D]/25 focus:outline-none dark:bg-[#1E232D] dark:text-stone-100"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="mb-1 flex items-center justify-between gap-1">
+                      <label
+                        htmlFor="alkitab-ayat-input"
+                        className="block text-xs font-semibold text-stone-600 dark:text-stone-300"
+                      >
+                        Sorot Ayat
+                      </label>
+                      {verseFilterInput && (
+                        <button
+                          type="button"
+                          onClick={() => setVerseFilterInput('')}
+                          className="text-[11px] font-semibold text-[#7F1D1D] hover:underline dark:text-amber-400 cursor-pointer"
+                        >
+                          Reset
+                        </button>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <input
+                        id="alkitab-ayat-input"
+                        type="text"
+                        value={verseFilterInput}
+                        onChange={(e) => setVerseFilterInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            if (firstHighlightedRangeVerse !== null) {
+                              const el = verseRefs.current[firstHighlightedRangeVerse];
+                              if (el) {
+                                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                return;
+                              }
+                            }
+                            scrollToArticle();
+                          }
+                        }}
+                        placeholder="9 atau 9 - 35"
+                        className="font-tabular w-full rounded-2xl bg-[#F4F6F9] py-2.5 pl-3.5 pr-8 text-sm font-bold text-stone-900 placeholder:text-xs placeholder:font-normal placeholder:text-stone-400 focus:ring-2 focus:ring-[#7F1D1D]/25 focus:outline-none dark:bg-[#1E232D] dark:text-stone-100"
+                      />
+                      {verseFilterInput && (
+                        <button
+                          type="button"
+                          onClick={() => setVerseFilterInput('')}
+                          aria-label="Hapus sorotan ayat"
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-stone-400 hover:bg-stone-200 hover:text-stone-700 dark:hover:bg-stone-700 dark:hover:text-stone-200 cursor-pointer"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {chapterInput !== '' && Number(chapterInput) > currentBookMeta.chaptersCount && (
+                  <p className="text-[11px] font-medium text-amber-700 dark:text-amber-300">
+                    Kitab {currentBookMeta.name} hanya memiliki 1 sampai {currentBookMeta.chaptersCount} pasal.
+                  </p>
+                )}
+
+                {parsedVerseHighlight.error ? (
+                  <p className="text-[11px] font-medium text-red-600 dark:text-red-400">
+                    {parsedVerseHighlight.error}
+                  </p>
+                ) : parsedVerseHighlight.mode === 'highlighted' ? (
+                  hasMatchingHighlightedVerse ? (
+                    <p className="text-[11px] text-stone-500 dark:text-stone-400">
+                      Menampilkan seluruh ayat dan menyorot{' '}
+                      <span className="font-semibold text-[#7F1D1D] dark:text-amber-400">
+                        Ayat {parsedVerseHighlight.label}
+                      </span>{' '}
+                      pada {currentBookMeta.name} {selectedChapter}.
+                    </p>
+                  ) : (
+                    <p className="text-[11px] font-medium text-amber-700 dark:text-amber-300">
+                      Ayat {parsedVerseHighlight.label} di luar jumlah ayat pasal ini (tersedia ayat 1–{chapterData?.verses.length ?? 0}).
+                    </p>
+                  )
+                ) : (
+                  <p className="text-[11px] text-stone-500 dark:text-stone-400">
+                    Seluruh ayat pasal tampil otomatis{chapterData ? ` (${chapterData.verses.length} ayat)` : ''}. Ketik{' '}
+                    <span className="font-semibold text-stone-700 dark:text-stone-300">9</span> atau{' '}
+                    <span className="font-semibold text-stone-700 dark:text-stone-300">9 - 35</span> untuk menyorot ayat pilihan.
+                  </p>
+                )}
               </div>
 
               {/* Search: Current Chapter or Full Offline Database */}
-              <div className="space-y-2.5 border-t border-stone-100 pt-3 dark:border-stone-800">
+              <div className="space-y-2.5 border-t border-stone-100 pt-3 dark:border-stone-800/80">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-xs font-semibold text-stone-500 dark:text-stone-400">
                     Cari Ayat
                   </p>
-                  <div className="flex gap-1 rounded-lg bg-stone-100 p-0.5 text-[11px] font-semibold dark:bg-stone-800">
+                  <div className="flex gap-1 rounded-full bg-[#F4F6F9] p-0.5 text-[11px] font-semibold dark:bg-[#1E232D]">
                     <button
                       type="button"
                       onClick={() => setSearchMode('chapter')}
-                      className={`rounded-md px-2 py-1 cursor-pointer ${
+                      className={`rounded-full px-2.5 py-1 cursor-pointer ${
                         searchMode === 'chapter'
-                          ? 'bg-white text-[#7F1D1D] shadow-2xs dark:bg-stone-900 dark:text-amber-400'
+                          ? 'bg-white text-[#7F1D1D] shadow-2xs dark:bg-[#161A22] dark:text-amber-300'
                           : 'text-stone-600 dark:text-stone-300'
                       }`}
                     >
@@ -491,20 +660,20 @@ export const AlkitabPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setSearchMode('offline-db')}
-                      className={`rounded-md px-2 py-1 cursor-pointer ${
+                      className={`rounded-full px-2.5 py-1 cursor-pointer ${
                         searchMode === 'offline-db'
-                          ? 'bg-white text-[#7F1D1D] shadow-2xs dark:bg-stone-900 dark:text-amber-400'
+                          ? 'bg-white text-[#7F1D1D] shadow-2xs dark:bg-[#161A22] dark:text-amber-300'
                           : 'text-stone-600 dark:text-stone-300'
                       }`}
                     >
-                      Database Offline
+                      Offline DB
                     </button>
                   </div>
                 </div>
 
                 <form onSubmit={handleDbSearchSubmit} className="flex gap-1.5">
                   <div className="relative flex-1">
-                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+                    <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
                     <input
                       type="text"
                       value={verseQuery}
@@ -512,16 +681,16 @@ export const AlkitabPage: React.FC = () => {
                       placeholder={
                         searchMode === 'chapter'
                           ? 'Kata atau nomor ayat...'
-                          : 'Cari kata di seluruh database offline...'
+                          : 'Cari kata di database offline...'
                       }
-                      className="w-full rounded-xl border border-stone-200 bg-stone-50 py-2 pl-9 pr-3 text-xs text-stone-900 placeholder:text-stone-400 focus:border-[#7F1D1D] focus:outline-none dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100"
+                      className="w-full rounded-full bg-[#F4F6F9] py-2 pl-10 pr-3 text-xs text-stone-900 placeholder:text-stone-400 focus:ring-2 focus:ring-[#7F1D1D]/25 focus:outline-none dark:bg-[#1E232D] dark:text-stone-100"
                     />
                   </div>
                   {searchMode === 'offline-db' && (
                     <button
                       type="submit"
                       disabled={isSearchingDb || verseQuery.trim().length < 2}
-                      className="rounded-xl bg-[#7F1D1D] px-3 text-xs font-semibold text-white hover:bg-[#68151B] disabled:opacity-50 dark:bg-amber-500 dark:text-stone-950 cursor-pointer"
+                      className="rounded-full bg-[#7F1D1D] px-4 text-xs font-semibold text-white hover:bg-[#68151B] disabled:opacity-50 dark:bg-amber-400 dark:text-stone-950 cursor-pointer"
                     >
                       Cari
                     </button>
@@ -529,23 +698,29 @@ export const AlkitabPage: React.FC = () => {
                 </form>
 
                 {searchMode === 'offline-db' && searchResults.length > 0 && (
-                  <div className="max-h-[220px] divide-y divide-stone-100 overflow-y-auto rounded-xl border border-stone-200 bg-stone-50/60 dark:divide-stone-800 dark:border-stone-800 dark:bg-stone-800/40">
+                  <div className="max-h-[220px] divide-y divide-stone-100 overflow-y-auto rounded-2xl bg-[#F4F6F9] dark:divide-stone-800 dark:bg-[#1E232D]">
                     {searchResults.map((res) => (
                       <button
                         key={`${res.bookId}-${res.chapter}-${res.verse}`}
                         type="button"
                         onClick={() => {
                           setHighlightedVerse(res.verse);
+                          setVerseFilterInput('');
                           selectBook(res.bookId, res.chapter);
                           setSearchMode('chapter');
                           setVerseQuery('');
                           scrollToArticle();
                         }}
-                        className="block w-full p-2.5 text-left hover:bg-stone-100 dark:hover:bg-stone-800 cursor-pointer"
+                        className="block w-full p-3 text-left hover:bg-stone-200/50 dark:hover:bg-stone-700/50 cursor-pointer"
                       >
                         <p className="font-tabular text-[11px] font-bold text-[#7F1D1D] dark:text-amber-400">
                           {res.bookName} {res.chapter}:{res.verse}
                         </p>
+                        {res.title && (
+                          <p className="mt-0.5 text-[11px] font-semibold text-stone-800 dark:text-stone-200">
+                            {res.title}
+                          </p>
+                        )}
                         <p className="mt-0.5 line-clamp-2 text-xs text-stone-700 dark:text-stone-300">
                           {res.text}
                         </p>
@@ -575,19 +750,19 @@ export const AlkitabPage: React.FC = () => {
 
               {bookmarks.length > 0 && (
                 <div className="relative">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+                  <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
                   <input
                     type="text"
                     value={bookmarkQuery}
                     onChange={(e) => setBookmarkQuery(e.target.value)}
                     placeholder="Cari kitab, teks, atau catatan..."
-                    className="w-full rounded-xl border border-stone-200 bg-stone-50 py-2 pl-9 pr-3 text-xs text-stone-900 placeholder:text-stone-400 focus:border-[#7F1D1D] focus:outline-none dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100"
+                    className="w-full rounded-full bg-[#F4F6F9] py-2 pl-10 pr-3 text-xs text-stone-900 placeholder:text-stone-400 focus:ring-2 focus:ring-[#7F1D1D]/25 focus:outline-none dark:bg-[#1E232D] dark:text-stone-100"
                   />
                 </div>
               )}
 
               {bookmarks.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-stone-200 bg-stone-50/70 p-4 text-center dark:border-stone-700 dark:bg-stone-800/40">
+                <div className="rounded-2xl bg-[#F4F6F9] p-5 text-center dark:bg-[#1E232D]">
                   <Bookmark className="mx-auto h-6 w-6 text-stone-400" />
                   <p className="mt-2 text-xs font-semibold text-stone-700 dark:text-stone-300">
                     Belum ada ayat favorit tersimpan
@@ -607,7 +782,7 @@ export const AlkitabPage: React.FC = () => {
                     return (
                       <div
                         key={b.id}
-                        className="rounded-xl border border-stone-200 bg-stone-50/60 p-3 dark:border-stone-800 dark:bg-stone-800/40"
+                        className="rounded-2xl bg-[#F4F6F9] p-3.5 dark:bg-[#1E232D]"
                       >
                         <div className="flex items-start justify-between gap-2">
                           <button
@@ -638,7 +813,7 @@ export const AlkitabPage: React.FC = () => {
                                 )
                               }
                               title="Bagikan ayat ini ke media sosial"
-                              className="rounded-lg p-1.5 text-stone-500 hover:bg-stone-200/70 hover:text-[#7F1D1D] dark:text-stone-400 dark:hover:bg-stone-700 dark:hover:text-amber-400 cursor-pointer"
+                              className="rounded-full p-1.5 text-stone-500 hover:bg-white hover:text-[#7F1D1D] dark:text-stone-400 dark:hover:bg-stone-700 dark:hover:text-amber-400 cursor-pointer"
                             >
                               <Share2 className="h-3.5 w-3.5" />
                             </button>
@@ -649,7 +824,7 @@ export const AlkitabPage: React.FC = () => {
                                 setNoteDraft(b.note || '');
                               }}
                               title="Tambah / Ubah Catatan"
-                              className="rounded-lg p-1.5 text-stone-500 hover:bg-stone-200/70 dark:text-stone-400 dark:hover:bg-stone-700 cursor-pointer"
+                              className="rounded-full p-1.5 text-stone-500 hover:bg-white dark:text-stone-400 dark:hover:bg-stone-700 cursor-pointer"
                             >
                               <Pencil className="h-3.5 w-3.5" />
                             </button>
@@ -660,7 +835,7 @@ export const AlkitabPage: React.FC = () => {
                                 showToast(`${b.bookName} ${b.chapter}:${b.verse} dihapus dari Ayat Favorit.`);
                               }}
                               title="Hapus dari Ayat Favorit"
-                              className="rounded-lg p-1.5 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40 cursor-pointer"
+                              className="rounded-full p-1.5 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40 cursor-pointer"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                             </button>
@@ -678,7 +853,7 @@ export const AlkitabPage: React.FC = () => {
                         </button>
 
                         {b.note && !isEditingNote && (
-                          <p className="mt-2 rounded-lg bg-amber-50/80 px-2.5 py-1.5 text-[11px] italic text-amber-950 dark:bg-amber-950/30 dark:text-amber-200">
+                          <p className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-[11px] italic text-amber-950 dark:bg-amber-950/35 dark:text-amber-200">
                             Catatan: {b.note}
                           </p>
                         )}
@@ -690,13 +865,13 @@ export const AlkitabPage: React.FC = () => {
                               value={noteDraft}
                               onChange={(e) => setNoteDraft(e.target.value)}
                               placeholder="Tulis catatan perenungan..."
-                              className="w-full rounded-lg border border-stone-200 bg-white px-2.5 py-1.5 text-xs dark:border-stone-700 dark:bg-stone-900"
+                              className="w-full rounded-xl bg-white px-3 py-2 text-xs text-stone-900 focus:outline-none dark:bg-[#161A22] dark:text-stone-100"
                             />
                             <div className="flex justify-end gap-1.5">
                               <button
                                 type="button"
                                 onClick={() => setEditingNoteId(null)}
-                                className="rounded-lg px-2.5 py-1 text-[11px] font-semibold text-stone-600 hover:bg-stone-200 dark:text-stone-300 dark:hover:bg-stone-700 cursor-pointer"
+                                className="rounded-full px-3 py-1 text-[11px] font-semibold text-stone-600 hover:bg-stone-200 dark:text-stone-300 dark:hover:bg-stone-700 cursor-pointer"
                               >
                                 Batal
                               </button>
@@ -707,7 +882,7 @@ export const AlkitabPage: React.FC = () => {
                                   setEditingNoteId(null);
                                   showToast('Catatan ayat favorit disimpan.');
                                 }}
-                                className="rounded-lg bg-[#7F1D1D] px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-[#68151B] dark:bg-amber-500 dark:text-stone-950 cursor-pointer"
+                                className="rounded-full bg-[#7F1D1D] px-3 py-1 text-[11px] font-semibold text-white hover:bg-[#68151B] dark:bg-amber-400 dark:text-stone-950 cursor-pointer"
                               >
                                 Simpan
                               </button>
@@ -726,9 +901,9 @@ export const AlkitabPage: React.FC = () => {
         {/* Right Panel: Scripture Text */}
         <article
           ref={articleRef}
-          className="rounded-3xl border border-stone-200 bg-white p-6 dark:border-stone-800 dark:bg-stone-900 sm:p-8"
+          className="rounded-[24px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22] sm:p-8"
         >
-          <div className="flex flex-wrap items-start justify-between gap-4 border-b border-stone-100 pb-4 dark:border-stone-800">
+          <div className="flex flex-wrap items-start justify-between gap-4 border-b border-stone-100 pb-4 dark:border-stone-800/80">
             <div>
               <p className="text-xs font-semibold text-[#7F1D1D] dark:text-amber-400">
                 {currentBookMeta.testament === 'PL' ? 'Perjanjian Lama' : 'Perjanjian Baru'} ·{' '}
@@ -736,10 +911,36 @@ export const AlkitabPage: React.FC = () => {
               </p>
               <h1 className="mt-1 text-2xl font-bold text-stone-900 dark:text-stone-100 sm:text-3xl">
                 {currentBookMeta.name} {selectedChapter}
+                {parsedVerseHighlight.mode === 'highlighted' && (
+                  <span className="font-tabular text-[#7F1D1D] dark:text-amber-400">
+                    :{parsedVerseHighlight.label}
+                  </span>
+                )}
               </h1>
+              {activeHeaderPericope && (
+                <p className="mt-1.5 text-sm font-semibold text-stone-700 dark:text-stone-200">
+                  {activeHeaderPericope.title}
+                  {activeHeaderPericope.isContinuation && (
+                    <span className="ml-1.5 text-xs font-normal text-stone-500 dark:text-stone-400">
+                      (lanjutan dari {currentBookMeta.name} {activeHeaderPericope.startChapter}:{activeHeaderPericope.startVerse})
+                    </span>
+                  )}
+                </p>
+              )}
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
+              {parsedVerseHighlight.mode === 'highlighted' && (
+                <button
+                  type="button"
+                  onClick={() => setVerseFilterInput('')}
+                  className="inline-flex min-h-[38px] items-center gap-1.5 rounded-full bg-[#7F1D1D]/10 px-3.5 text-xs font-semibold text-[#7F1D1D] hover:bg-[#7F1D1D]/15 dark:bg-amber-400/15 dark:text-amber-300 cursor-pointer"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  <span>Hapus Sorotan</span>
+                </button>
+              )}
+
               <button
                 type="button"
                 onClick={() => {
@@ -748,7 +949,7 @@ export const AlkitabPage: React.FC = () => {
                     sidebarRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
                   }
                 }}
-                className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border border-amber-300/80 bg-amber-50/70 px-3 text-xs font-semibold text-amber-950 hover:bg-amber-100 dark:border-amber-800/60 dark:bg-amber-950/30 dark:text-amber-200 cursor-pointer"
+                className="inline-flex min-h-[38px] items-center gap-1.5 rounded-full bg-amber-50 px-3.5 text-xs font-semibold text-amber-950 hover:bg-amber-100 dark:bg-amber-950/35 dark:text-amber-200 cursor-pointer"
               >
                 <Bookmark className="h-3.5 w-3.5 fill-current text-amber-600 dark:text-amber-400" />
                 <span>Favorit ({bookmarks.length})</span>
@@ -760,25 +961,24 @@ export const AlkitabPage: React.FC = () => {
                   disabled={loadingChapter}
                   onClick={() => void refreshCurrentChapter()}
                   title="Muat ulang teks pasal dari server"
-                  className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border border-stone-200 px-3 text-xs font-semibold text-stone-700 hover:bg-stone-50 disabled:opacity-50 dark:border-stone-700 dark:text-stone-200 dark:hover:bg-stone-800 cursor-pointer"
+                  className="inline-flex min-h-[38px] items-center gap-1.5 rounded-full bg-[#F4F6F9] px-3.5 text-xs font-semibold text-stone-700 hover:bg-stone-200/70 disabled:opacity-50 dark:bg-[#1E232D] dark:text-stone-200 cursor-pointer"
                 >
                   <RefreshCw className={`h-3.5 w-3.5 ${loadingChapter ? 'animate-spin' : ''}`} />
-                  <span className="hidden sm:inline">Sinkron Pasal</span>
+                  <span className="hidden sm:inline">Sinkron</span>
                 </button>
               )}
-              <BookOpen className="hidden h-6 w-6 text-amber-600 dark:text-amber-400 sm:block" />
             </div>
           </div>
 
           {chapterData?.isPartialSeed && (
-            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
-              Menampilkan cuplikan ayat bawaan (offline). Hubungkan internet atau klik{' '}
-              <strong>Unduh 66 Kitab Offline</strong> di atas untuk membaca seluruh ayat pasal ini.
+            <div className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-xs text-amber-950 dark:bg-amber-950/30 dark:text-amber-200">
+              Menampilkan cuplikan ayat bawaan (offline). Hubungkan internet atau buka menu{' '}
+              <strong>Pengaturan</strong> untuk mengunduh seluruh 66 kitab offline.
             </div>
           )}
 
           {chapterError && (
-            <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-800 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
+            <div className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-xs text-red-800 dark:bg-red-950/30 dark:text-red-300">
               {chapterError}
             </div>
           )}
@@ -788,20 +988,20 @@ export const AlkitabPage: React.FC = () => {
           >
             {loadingChapter && !chapterData ? (
               <div className="space-y-3 py-6">
-                <div className="h-4 w-5/6 animate-pulse rounded bg-stone-100 dark:bg-stone-800" />
-                <div className="h-4 w-full animate-pulse rounded bg-stone-100 dark:bg-stone-800" />
-                <div className="h-4 w-4/5 animate-pulse rounded bg-stone-100 dark:bg-stone-800" />
+                <div className="h-4 w-5/6 animate-pulse rounded bg-[#F4F6F9] dark:bg-[#1E232D]" />
+                <div className="h-4 w-full animate-pulse rounded bg-[#F4F6F9] dark:bg-[#1E232D]" />
+                <div className="h-4 w-4/5 animate-pulse rounded bg-[#F4F6F9] dark:bg-[#1E232D]" />
                 <p className="pt-2 font-sans text-xs text-stone-500">
                   Memuat {currentBookMeta.name} pasal {selectedChapter} dari database...
                 </p>
               </div>
             ) : !chapterData ? (
-              <div className="rounded-2xl border border-stone-200 bg-stone-50 p-5 font-sans dark:border-stone-800 dark:bg-stone-800/40">
+              <div className="rounded-2xl bg-[#F4F6F9] p-5 font-sans dark:bg-[#1E232D]">
                 <p className="text-sm font-semibold text-stone-900 dark:text-stone-100">
                   Pasal belum tersedia di penyimpanan offline.
                 </p>
                 <p className="mt-1 text-xs text-stone-600 dark:text-stone-400">
-                  Aktifkan koneksi internet lalu tekan Muat Ulang, atau unduh paket 66 kitab untuk akses penuh tanpa internet.
+                  Aktifkan koneksi internet lalu tekan Sinkron, atau buka menu Pengaturan untuk mengunduh paket 66 kitab offline.
                 </p>
               </div>
             ) : visibleVerses.length === 0 ? (
@@ -811,29 +1011,40 @@ export const AlkitabPage: React.FC = () => {
             ) : (
               visibleVerses.map((v) => {
                 const saved = isBookmarked(currentBookMeta.bookId, selectedChapter, v.verse);
-                const isFocused = highlightedVerse === v.verse;
+                const isRangeHighlighted =
+                  parsedVerseHighlight.mode === 'highlighted' &&
+                  parsedVerseHighlight.ranges.some(([start, end]) => v.verse >= start && v.verse <= end);
+                const isFocused = highlightedVerse === v.verse || isRangeHighlighted;
                 const isCopied = copiedVerseNum === v.verse;
+                const pericopeHeading =
+                  v.title ||
+                  getVersePericopeTitle(currentBookMeta.bookId, selectedChapter, v.verse);
 
                 return (
-                  <div
-                    key={v.verse}
-                    ref={(el) => {
-                      verseRefs.current[v.verse] = el;
-                    }}
-                    className={`group flex items-start justify-between gap-3 rounded-xl px-2.5 py-2 transition-colors ${
-                      isFocused
-                        ? 'bg-amber-100/80 ring-2 ring-[#7F1D1D]/50 dark:bg-amber-950/40 dark:ring-amber-400/60'
-                        : saved
-                        ? 'bg-amber-50/70 ring-1 ring-amber-300/60 dark:bg-amber-950/20 dark:ring-amber-700/40'
-                        : 'hover:bg-stone-50 dark:hover:bg-stone-800/40'
-                    }`}
-                  >
-                    <p className="leading-relaxed">
-                      <sup className="font-tabular mr-1.5 text-xs font-bold text-[#7F1D1D] dark:text-amber-400">
-                        {v.verse}
-                      </sup>
-                      <span>{v.text}</span>
-                    </p>
+                  <React.Fragment key={v.verse}>
+                    {pericopeHeading && (
+                      <h2 className="pt-4 first:pt-0 pb-1 font-sans text-base font-bold tracking-tight text-[#7F1D1D] dark:text-amber-300 sm:text-lg">
+                        {pericopeHeading}
+                      </h2>
+                    )}
+                    <div
+                      ref={(el) => {
+                        verseRefs.current[v.verse] = el;
+                      }}
+                      className={`group flex items-start justify-between gap-3 rounded-2xl px-3 py-2.5 transition-colors ${
+                        isFocused
+                          ? 'bg-amber-100/90 ring-2 ring-[#7F1D1D]/50 dark:bg-amber-500/20 dark:ring-amber-400/70'
+                          : saved
+                          ? 'bg-amber-50/75 dark:bg-amber-950/25'
+                          : 'hover:bg-[#F4F6F9] dark:hover:bg-[#1E232D]/70'
+                      }`}
+                    >
+                      <p className="leading-relaxed">
+                        <sup className="font-tabular mr-1.5 text-xs font-bold text-[#7F1D1D] dark:text-amber-400">
+                          {v.verse}
+                        </sup>
+                        <span>{v.text}</span>
+                      </p>
 
                     <div className="mt-0.5 flex shrink-0 items-center gap-1 font-sans">
                       <button
@@ -846,7 +1057,7 @@ export const AlkitabPage: React.FC = () => {
                         }
                         title={`Bagikan ${currentBookMeta.name} ${selectedChapter}:${v.verse}`}
                         aria-label={`Bagikan ayat ${v.verse}`}
-                        className="rounded-lg p-1.5 text-stone-400 opacity-80 transition-opacity hover:bg-stone-200/70 hover:text-[#7F1D1D] sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 dark:hover:bg-stone-700 dark:hover:text-amber-400 cursor-pointer"
+                        className="rounded-full p-1.5 text-stone-400 opacity-80 transition-opacity hover:bg-white hover:text-[#7F1D1D] sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 dark:hover:bg-stone-700 dark:hover:text-amber-400 cursor-pointer"
                       >
                         <Share2 className="h-3.5 w-3.5" />
                       </button>
@@ -856,7 +1067,7 @@ export const AlkitabPage: React.FC = () => {
                         onClick={() => void handleCopyVerse(v.verse, v.text)}
                         title={`Salin ${currentBookMeta.name} ${selectedChapter}:${v.verse}`}
                         aria-label={`Salin ayat ${v.verse}`}
-                        className="rounded-lg p-1.5 text-stone-400 opacity-80 transition-opacity hover:bg-stone-200/70 hover:text-stone-700 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 dark:hover:bg-stone-700 dark:hover:text-stone-200 cursor-pointer"
+                        className="rounded-full p-1.5 text-stone-400 opacity-80 transition-opacity hover:bg-white hover:text-stone-700 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 dark:hover:bg-stone-700 dark:hover:text-stone-200 cursor-pointer"
                       >
                         {isCopied ? (
                           <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
@@ -870,50 +1081,53 @@ export const AlkitabPage: React.FC = () => {
                         onClick={() => handleToggleVerseBookmark(v.verse, v.text)}
                         title={saved ? 'Hapus dari Ayat Favorit' : 'Simpan ke Ayat Favorit'}
                         aria-label={saved ? `Hapus bookmark ayat ${v.verse}` : `Simpan bookmark ayat ${v.verse}`}
-                        className={`rounded-lg p-1.5 transition-all cursor-pointer ${
+                        className={`rounded-full p-1.5 transition-all cursor-pointer ${
                           saved
                             ? 'text-amber-600 opacity-100 hover:bg-amber-100 dark:text-amber-400 dark:hover:bg-amber-900/40'
-                            : 'text-stone-400 opacity-80 hover:bg-stone-200/70 hover:text-[#7F1D1D] sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 dark:hover:bg-stone-700 dark:hover:text-amber-400'
+                            : 'text-stone-400 opacity-80 hover:bg-white hover:text-[#7F1D1D] sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100 dark:hover:bg-stone-700 dark:hover:text-amber-400'
                         }`}
                       >
                         <Bookmark className={`h-4 w-4 ${saved ? 'fill-current' : ''}`} />
                       </button>
                     </div>
                   </div>
+                </React.Fragment>
                 );
               })
             )}
           </div>
 
           {/* Prev / Next Chapter Navigation */}
-          <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-stone-100 pt-5 dark:border-stone-800">
+          <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-stone-100 pt-5 dark:border-stone-800/80">
             <button
               type="button"
               disabled={!hasPrevChapter}
               onClick={() => {
+                setVerseFilterInput('');
                 goToPrevChapter();
                 scrollToArticle();
               }}
-              className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-stone-200 bg-stone-50 px-4 py-2 text-xs font-semibold text-stone-800 hover:bg-stone-100 disabled:opacity-40 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200 cursor-pointer"
+              className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-[#F4F6F9] px-4 py-2 text-xs font-semibold text-stone-800 hover:bg-stone-200/70 disabled:opacity-40 dark:bg-[#1E232D] dark:text-stone-200 cursor-pointer"
             >
               <ChevronLeft className="h-4 w-4" />
-              <span>Pasal Sebelumnya</span>
+              <span>Sebelumnya</span>
             </button>
 
             <span className="font-tabular text-xs font-semibold text-stone-500 dark:text-stone-400">
-              {currentBookMeta.name} · Pasal {selectedChapter} / {currentBookMeta.chaptersCount}
+              {currentBookMeta.name} · {selectedChapter} / {currentBookMeta.chaptersCount}
             </span>
 
             <button
               type="button"
               disabled={!hasNextChapter}
               onClick={() => {
+                setVerseFilterInput('');
                 goToNextChapter();
                 scrollToArticle();
               }}
-              className="inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-[#7F1D1D] px-4 py-2 text-xs font-semibold text-white hover:bg-[#68151B] disabled:opacity-40 dark:bg-amber-500 dark:text-stone-950 cursor-pointer"
+              className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-[#7F1D1D] px-4 py-2 text-xs font-semibold text-white hover:bg-[#68151B] disabled:opacity-40 dark:bg-amber-400 dark:text-stone-950 cursor-pointer"
             >
-              <span>Pasal Berikutnya</span>
+              <span>Berikutnya</span>
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>

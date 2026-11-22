@@ -46,16 +46,17 @@ export const ShareSheetModal: React.FC<ShareSheetModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-4 backdrop-blur-xs"
       role="dialog"
       aria-modal="true"
       aria-labelledby="share-sheet-title"
     >
-      <div className="w-full max-w-md rounded-3xl border border-stone-200 bg-white p-6 shadow-xl dark:border-stone-800 dark:bg-stone-900">
+      <div className="animate-android-sheet w-full max-w-md rounded-t-[28px] bg-white p-6 shadow-2xl dark:bg-[#161A22] sm:rounded-[28px]">
+        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-stone-300 dark:bg-stone-700 sm:hidden" />
         <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#7F1D1D]/10 text-[#7F1D1D] dark:bg-amber-500/15 dark:text-amber-400">
-              <Share2 className="h-4 w-4" />
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#7F1D1D]/10 text-[#7F1D1D] dark:bg-amber-500/15 dark:text-amber-400">
+              <Share2 className="h-4.5 w-4.5" />
             </div>
             <div>
               <h2
@@ -65,7 +66,7 @@ export const ShareSheetModal: React.FC<ShareSheetModalProps> = ({
                 Bagikan ke Media Sosial
               </h2>
               <p className="text-xs text-stone-500 dark:text-stone-400">
-                Pilih platform atau salin teks untuk dibagikan
+                Pilih aplikasi atau salin tautan cepat
               </p>
             </div>
           </div>
@@ -73,13 +74,13 @@ export const ShareSheetModal: React.FC<ShareSheetModalProps> = ({
             type="button"
             onClick={onClose}
             aria-label="Tutup jendela bagikan"
-            className="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100 hover:text-stone-700 dark:hover:bg-stone-800 dark:hover:text-stone-200 cursor-pointer"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F4F6F9] text-stone-500 hover:bg-stone-200 dark:bg-[#1E232D] dark:text-stone-300 cursor-pointer"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="mt-4 rounded-2xl border border-stone-200 bg-stone-50 p-3.5 text-xs leading-relaxed text-stone-700 dark:border-stone-800 dark:bg-stone-800/60 dark:text-stone-200">
+        <div className="mt-4 rounded-2xl bg-[#F4F6F9] p-3.5 text-xs leading-relaxed text-stone-700 dark:bg-[#1E232D] dark:text-stone-200">
           <p className="font-bold text-[#7F1D1D] dark:text-amber-400">{payload.title}</p>
           <p className="mt-1.5 max-h-36 overflow-y-auto whitespace-pre-line">{payload.text}</p>
         </div>
@@ -90,7 +91,7 @@ export const ShareSheetModal: React.FC<ShareSheetModalProps> = ({
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => onSharedOrCopied?.('Membuka WhatsApp untuk membagikan konten.')}
-            className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-emerald-700"
+            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-emerald-700"
           >
             <MessageCircle className="h-4 w-4" />
             <span>WhatsApp</span>
@@ -101,7 +102,7 @@ export const ShareSheetModal: React.FC<ShareSheetModalProps> = ({
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => onSharedOrCopied?.('Membuka Telegram untuk membagikan konten.')}
-            className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xl bg-sky-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-sky-700"
+            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-sky-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-sky-700"
           >
             <ExternalLink className="h-4 w-4" />
             <span>Telegram</span>
@@ -112,7 +113,7 @@ export const ShareSheetModal: React.FC<ShareSheetModalProps> = ({
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => onSharedOrCopied?.('Membuka Facebook untuk membagikan konten.')}
-            className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-blue-700"
+            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-blue-700"
           >
             <ExternalLink className="h-4 w-4" />
             <span>Facebook</span>
@@ -123,7 +124,7 @@ export const ShareSheetModal: React.FC<ShareSheetModalProps> = ({
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => onSharedOrCopied?.('Membuka X untuk membagikan konten.')}
-            className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xl bg-stone-900 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-stone-800 dark:bg-stone-700 dark:hover:bg-stone-600"
+            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-stone-900 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-stone-800 dark:bg-stone-700 dark:hover:bg-stone-600"
           >
             <ExternalLink className="h-4 w-4" />
             <span>X / Twitter</span>
@@ -133,7 +134,7 @@ export const ShareSheetModal: React.FC<ShareSheetModalProps> = ({
         <button
           type="button"
           onClick={handleCopy}
-          className="mt-3 flex min-h-[42px] w-full items-center justify-center gap-2 rounded-xl border border-stone-200 bg-stone-50 px-4 py-2 text-xs font-semibold text-stone-800 transition-colors hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:hover:bg-stone-700 cursor-pointer"
+          className="mt-3 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full bg-[#F4F6F9] px-4 py-2 text-xs font-semibold text-stone-800 transition-colors hover:bg-stone-200 dark:bg-[#1E232D] dark:text-stone-100 dark:hover:bg-stone-800 cursor-pointer"
         >
           {copied ? (
             <>

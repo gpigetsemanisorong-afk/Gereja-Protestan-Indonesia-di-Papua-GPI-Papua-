@@ -2,29 +2,22 @@ import React, { useState } from 'react';
 import {
   ArrowRight,
   BarChart3,
-  BookOpen,
   BookText,
   CalendarDays,
   Church,
-  Clock,
   FileText,
-  HandHeart,
-  Heart,
+  HeartHandshake,
   Info,
   Layers,
-  MapPin,
-  Music,
   Share2,
   Wallet,
 } from 'lucide-react';
 import { usePortal } from '../context/PortalContext';
 import { PageRoute } from '../types/church';
-import { PWAInstallButton } from '../components/PWAComponents';
 import { ShareSheetModal } from '../components/ShareSheetModal';
 import { KalenderKegiatanWidget } from '../components/KalenderKegiatanWidget';
 import {
   buildBibleVerseSharePayload,
-  buildWartaSharePayload,
   SharePayload,
   triggerWebShare,
 } from '../utils/shareUtils';
@@ -32,86 +25,62 @@ import {
 const MENU_ITEMS: {
   id: PageRoute;
   title: string;
-  subtitle: string;
   icon: React.ComponentType<{ className?: string }>;
   accentClass: string;
 }[] = [
   {
     id: 'tata-ibadah',
     title: 'Tata Ibadah',
-    subtitle: 'Liturgi Minggu & lirik',
     icon: Church,
-    accentClass: 'bg-[#7F1D1D]/10 text-[#7F1D1D] dark:bg-amber-500/15 dark:text-amber-400',
+    accentClass: 'bg-rose-500/12 text-[#7F1D1D] dark:bg-rose-400/15 dark:text-rose-300',
   },
   {
     id: 'liturgi-unsur',
-    title: 'Liturgi Unsur',
-    subtitle: 'PAR, PP, PERWATA, PERPRI & LANSIA',
+    title: 'Liturgi Wadah',
     icon: Layers,
-    accentClass: 'bg-amber-500/15 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300',
+    accentClass: 'bg-amber-500/12 text-amber-800 dark:bg-amber-400/15 dark:text-amber-300',
   },
   {
     id: 'jadwal',
-    title: 'Jadwal Ibadah',
-    subtitle: 'Minggu, Unsur & Sektor/Unit',
+    title: 'Jadwal',
     icon: CalendarDays,
-    accentClass: 'bg-amber-500/15 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300',
+    accentClass: 'bg-sky-500/12 text-sky-700 dark:bg-sky-400/15 dark:text-sky-300',
   },
   {
     id: 'warta',
-    title: 'Warta Jemaat',
-    subtitle: 'Pengumuman, HUT & PDF',
+    title: 'Warta',
     icon: FileText,
-    accentClass: 'bg-stone-200/80 text-stone-800 dark:bg-stone-800 dark:text-stone-200',
-  },
-  {
-    id: 'nyanyian',
-    title: 'Kidung Pujian',
-    subtitle: 'KJ, PKJ, NKB, DSL & NR',
-    icon: Music,
-    accentClass: 'bg-[#7F1D1D]/10 text-[#7F1D1D] dark:bg-amber-500/15 dark:text-amber-400',
-  },
-  {
-    id: 'alkitab',
-    title: 'Alkitab',
-    subtitle: 'Perjanjian Lama & Baru',
-    icon: BookOpen,
-    accentClass: 'bg-amber-500/15 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300',
-  },
-  {
-    id: 'layanan',
-    title: 'Layanan Jemaat',
-    subtitle: 'Sakit, baptis & nikah',
-    icon: HandHeart,
-    accentClass: 'bg-stone-200/80 text-stone-800 dark:bg-stone-800 dark:text-stone-200',
+    accentClass: 'bg-indigo-500/12 text-indigo-700 dark:bg-indigo-400/15 dark:text-indigo-300',
   },
   {
     id: 'kotak-doa',
-    title: 'Kotak Doa',
-    subtitle: 'Kirim permohonan doa',
-    icon: Heart,
-    accentClass: 'bg-[#7F1D1D]/10 text-[#7F1D1D] dark:bg-amber-500/15 dark:text-amber-400',
+    title: 'Kotak Doa & Layanan Jemaat',
+    icon: HeartHandshake,
+    accentClass: 'bg-teal-500/12 text-teal-700 dark:bg-teal-400/15 dark:text-teal-300',
   },
   {
     id: 'keuangan',
-    title: 'Laporan Keuangan',
-    subtitle: 'Kas & aksi pembangunan',
+    title: 'Keuangan',
     icon: Wallet,
-    accentClass: 'bg-[#7F1D1D]/10 text-[#7F1D1D] dark:bg-amber-500/15 dark:text-amber-400',
+    accentClass: 'bg-amber-500/12 text-amber-800 dark:bg-amber-400/15 dark:text-amber-300',
   },
   {
     id: 'statistik',
-    title: 'Data & Statistik',
-    subtitle: 'Sektor, Unit & Google Sheet',
+    title: 'Statistik',
     icon: BarChart3,
-    accentClass: 'bg-amber-500/15 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300',
+    accentClass: 'bg-violet-500/12 text-violet-700 dark:bg-violet-400/15 dark:text-violet-300',
   },
   {
     id: 'profil',
-    title: 'Profil & Kontak',
-    subtitle: 'Sejarah, peta & rekening',
+    title: 'Profil',
     icon: Info,
-    accentClass: 'bg-stone-200/80 text-stone-800 dark:bg-stone-800 dark:text-stone-200',
+    accentClass: 'bg-stone-500/12 text-stone-700 dark:bg-stone-400/15 dark:text-stone-300',
+  },
+  {
+    id: 'tentang',
+    title: 'Tentang',
+    icon: BookText,
+    accentClass: 'bg-slate-500/12 text-slate-700 dark:bg-slate-400/15 dark:text-slate-300',
   },
 ];
 
@@ -120,9 +89,6 @@ export const BerandaPage: React.FC = () => {
   const [heroImgError, setHeroImgError] = useState(false);
   const [sharePayload, setSharePayload] = useState<SharePayload | null>(null);
   const [shareNotice, setShareNotice] = useState<string | null>(null);
-
-  const upcomingSchedules = data.schedules.slice(0, 4);
-  const latestWarta = data.warta[0];
 
   const handleQuickShare = async (payload: SharePayload, successLabel: string) => {
     const res = await triggerWebShare(payload);
@@ -135,81 +101,96 @@ export const BerandaPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 md:space-y-7">
       {shareNotice && (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs font-semibold text-emerald-900 dark:border-emerald-900/50 dark:bg-emerald-950/30 dark:text-emerald-200">
+        <div className="rounded-2xl bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">
           {shareNotice}
         </div>
       )}
-      {/* Desktop 2-column layout (65% Left / 35% Right) */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[65fr_35fr] lg:items-start lg:gap-8">
-        {/* LEFT COLUMN (65%): Banner Utama + Grid Menu Utama */}
-        <div className="space-y-7">
-          {/* Banner Utama */}
-          <section className="relative overflow-hidden rounded-3xl border border-stone-200 bg-[#5C1215] text-white shadow-sm dark:border-stone-800">
+
+      {/* Desktop 2-column layout (Left: Hero & 9 Fitur / Right: Kalender Kegiatan) */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.45fr_1fr] lg:items-start lg:gap-7">
+        {/* LEFT COLUMN */}
+        <div className="space-y-6">
+          {/* Featured Sanctuary Card (Android Material You Banner) */}
+          <section className="relative overflow-hidden rounded-[28px] bg-[#5C1215] text-white shadow-sm">
             {!heroImgError ? (
               <img
                 src="/src/assets/images/hero_getsemani_sanctuary_1794648269013.jpg"
                 alt="Ruang Ibadah GPI Getsemani Sorong"
                 referrerPolicy="no-referrer"
                 onError={() => setHeroImgError(true)}
-                className="absolute inset-0 h-full w-full object-cover opacity-35"
+                className="absolute inset-0 h-full w-full object-cover opacity-30"
               />
             ) : null}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#5C1215]/95 via-[#7F1D1D]/85 to-[#2D0A0C]/95" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#68151B]/95 via-[#7F1D1D]/85 to-[#330A0C]/95" />
 
-            <div className="relative z-10 p-6 sm:p-8">
-              <p className="text-xs font-semibold tracking-wider text-amber-300 uppercase">
+            <div className="relative z-10 p-5 sm:p-7">
+              <p className="text-xs font-medium text-amber-300/95">
                 {data.profile.synod} · {data.profile.klasis}
               </p>
 
-              <h1 className="mt-2.5 max-w-2xl text-2xl font-bold leading-tight text-white text-balance sm:text-3xl lg:text-4xl">
+              <h1 className="mt-2 max-w-xl font-display text-xl font-bold leading-snug text-white text-balance sm:text-2xl lg:text-3xl">
                 {data.profile.ministryTheme}
               </h1>
 
-              <blockquote className="mt-5 rounded-2xl border border-white/15 bg-black/25 p-4 backdrop-blur-sm">
-                <div className="flex items-center gap-2 text-xs font-semibold text-amber-300">
-                  <BookText className="h-3.5 w-3.5" />
-                  <span>Ayat Minggu Ini · {data.profile.weeklyVerse.ref}</span>
-                </div>
-                <p className="mt-1.5 font-reading text-sm leading-relaxed text-stone-100 sm:text-base">
+              <div className="mt-4 border-t border-white/15 pt-4">
+                <p className="text-xs font-semibold text-amber-300">
+                  Ayat Minggu Ini · {data.profile.weeklyVerse.ref}
+                </p>
+                <p className="mt-1 font-reading text-sm leading-relaxed text-stone-100/95 sm:text-[15px]">
                   {data.profile.weeklyVerse.text}
                 </p>
-              </blockquote>
+              </div>
 
-              <div className="mt-6 flex flex-wrap items-center gap-3">
+              <div className="mt-5 flex flex-wrap items-center gap-2.5">
                 <button
                   type="button"
                   onClick={() => setRoute('tata-ibadah')}
-                  className="inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-semibold text-stone-950 transition-colors hover:bg-amber-400 cursor-pointer"
+                  className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-amber-400 px-5 py-2 text-xs font-bold text-stone-950 transition-transform hover:bg-amber-300 active:scale-[0.98] sm:text-sm cursor-pointer"
                 >
-                  <span>Buka Tata Ibadah Minggu Ini</span>
+                  <span>Buka Tata Ibadah</span>
                   <ArrowRight className="h-4 w-4" />
                 </button>
-                <div className="sm:hidden">
-                  <PWAInstallButton />
-                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    void handleQuickShare(
+                      buildBibleVerseSharePayload(
+                        data.profile.weeklyVerse.ref,
+                        data.profile.weeklyVerse.text,
+                        data.profile.name
+                      ),
+                      `Ayat ${data.profile.weeklyVerse.ref} berhasil dibagikan.`
+                    )
+                  }
+                  className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-white/15 px-4 py-2 text-xs font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/25 active:scale-[0.98] cursor-pointer"
+                >
+                  <Share2 className="h-3.5 w-3.5" />
+                  <span>Bagikan Ayat</span>
+                </button>
               </div>
             </div>
           </section>
 
-          {/* Grid Menu Utama: Mobile 3 cols | Tablet 4 cols | Desktop 5 cols */}
-          <section aria-labelledby="menu-utama-heading">
-            <div className="mb-4 flex items-baseline justify-between gap-4">
-              <div>
-                <h2
-                  id="menu-utama-heading"
-                  className="text-xl font-bold text-stone-900 dark:text-stone-100"
-                >
-                  Menu Pelayanan Jemaat
-                </h2>
-                <p className="mt-0.5 text-sm text-stone-500 dark:text-stone-400">
-                  Akses cepat ibadah, warta, kidung pujian, Alkitab, dan administrasi jemaat.
-                </p>
-              </div>
+          {/* Android Launcher Grid: Menu Pelayanan */}
+          <section
+            aria-labelledby="menu-utama-heading"
+            className="rounded-[24px] bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22] sm:p-6"
+          >
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2
+                id="menu-utama-heading"
+                className="text-base font-bold text-stone-900 dark:text-stone-100 sm:text-lg"
+              >
+                Layanan Jemaat
+              </h2>
+              <span className="text-xs text-stone-400 dark:text-stone-500">
+                {MENU_ITEMS.length} Fitur
+              </span>
             </div>
 
-            <div className="grid grid-cols-3 gap-2.5 md:grid-cols-4 md:gap-3.5 lg:grid-cols-5">
+            <div className="grid grid-cols-3 gap-x-2 gap-y-4 sm:gap-x-4">
               {MENU_ITEMS.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -217,159 +198,26 @@ export const BerandaPage: React.FC = () => {
                     key={item.id}
                     type="button"
                     onClick={() => setRoute(item.id)}
-                    className="group flex min-h-[116px] flex-col items-center justify-center rounded-2xl border border-stone-200 bg-white p-3 text-center transition-all hover:border-amber-500/60 hover:bg-amber-50/40 active:scale-[0.98] dark:border-stone-800 dark:bg-stone-900 dark:hover:border-amber-500/50 dark:hover:bg-stone-800/80 cursor-pointer sm:p-4"
+                    className="group flex flex-col items-center justify-start gap-2 rounded-2xl p-1 text-center transition-transform active:scale-95 cursor-pointer"
                   >
                     <div
-                      className={`flex h-11 w-11 items-center justify-center rounded-xl transition-transform group-hover:scale-105 ${item.accentClass}`}
+                      className={`flex h-13 w-13 items-center justify-center rounded-[18px] transition-transform group-hover:scale-105 ${item.accentClass}`}
                     >
-                      <Icon className="h-5 w-5" />
+                      <Icon className="h-[22px] w-[22px]" />
                     </div>
-                    <span className="mt-2.5 text-xs font-semibold leading-snug text-stone-900 dark:text-stone-100 sm:text-sm">
+                    <span className="line-clamp-2 text-[11px] font-semibold leading-tight text-stone-800 dark:text-stone-200 sm:text-xs">
                       {item.title}
-                    </span>
-                    <span className="mt-1 hidden text-[11px] leading-tight text-stone-500 dark:text-stone-400 sm:block">
-                      {item.subtitle}
                     </span>
                   </button>
                 );
               })}
             </div>
           </section>
-
-          {/* Kalender Kegiatan Interaktif */}
-          <KalenderKegiatanWidget schedules={data.schedules} />
-
-          {/* Latest Warta Preview */}
-          {latestWarta && (
-            <section className="rounded-2xl border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-900 sm:p-6">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-xs font-semibold text-[#7F1D1D] dark:text-amber-400">
-                  {latestWarta.edition} · {latestWarta.date}
-                </p>
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      void handleQuickShare(
-                        buildWartaSharePayload(latestWarta, data.profile.name),
-                        'Warta Jemaat terbaru berhasil dibagikan.'
-                      )
-                    }
-                    className="inline-flex items-center gap-1 rounded-lg border border-stone-200 bg-stone-50 px-2.5 py-1 text-xs font-semibold text-stone-700 hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200 cursor-pointer"
-                  >
-                    <Share2 className="h-3.5 w-3.5 text-[#7F1D1D] dark:text-amber-400" />
-                    <span>Bagikan</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRoute('warta')}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-[#7F1D1D] hover:underline dark:text-amber-400 cursor-pointer"
-                  >
-                    <span>Lihat Semua Warta</span>
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
-              <h3 className="mt-1.5 text-lg font-bold text-stone-900 dark:text-stone-100">
-                {latestWarta.title}
-              </h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-stone-600 dark:text-stone-300">
-                {latestWarta.summary}
-              </p>
-            </section>
-          )}
         </div>
 
-        {/* RIGHT COLUMN (35%): Jadwal Ibadah Terdekat + Ayat Minggu Ini */}
-        <aside className="space-y-6">
-          {/* Panel Samping: Jadwal Ibadah Terdekat */}
-          <div className="rounded-2xl border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-900">
-            <div className="flex items-center justify-between gap-3 border-b border-stone-100 pb-3.5 dark:border-stone-800">
-              <h2 className="text-base font-bold text-stone-900 dark:text-stone-100">
-                Jadwal Ibadah Terdekat
-              </h2>
-              <button
-                type="button"
-                onClick={() => setRoute('jadwal')}
-                className="text-xs font-semibold text-[#7F1D1D] hover:underline dark:text-amber-400 cursor-pointer"
-              >
-                Semua Jadwal
-              </button>
-            </div>
-
-            <div className="mt-4 divide-y divide-stone-100 dark:divide-stone-800">
-              {upcomingSchedules.map((sch) => (
-                <div key={sch.id} className="py-3.5 first:pt-0 last:pb-0">
-                  <p className="text-xs font-medium text-stone-500 dark:text-stone-400">
-                    {sch.category}
-                    {sch.unsur ? ` · ${sch.unsur}` : ''}
-                    {sch.unit ? ` · ${sch.unit}` : ''}
-                  </p>
-                  <p className="mt-0.5 text-sm font-semibold text-stone-900 dark:text-stone-100">
-                    {sch.title}
-                  </p>
-                  <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-stone-600 dark:text-stone-300">
-                    <span className="inline-flex items-center gap-1">
-                      <Clock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                      {sch.date}, {sch.time}
-                    </span>
-                    <span className="inline-flex items-center gap-1">
-                      <MapPin className="h-3.5 w-3.5 text-[#7F1D1D] dark:text-amber-400" />
-                      {sch.location}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Panel Samping: Ayat Minggu Ini */}
-          <div className="rounded-2xl border border-amber-200/80 bg-amber-50/70 p-5 dark:border-amber-900/40 dark:bg-amber-950/20">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-xs font-semibold text-amber-800 dark:text-amber-400">
-                Renungan & Ayat Minggu Ini
-              </p>
-              <button
-                type="button"
-                onClick={() =>
-                  void handleQuickShare(
-                    buildBibleVerseSharePayload(
-                      data.profile.weeklyVerse.ref,
-                      data.profile.weeklyVerse.text,
-                      data.profile.name
-                    ),
-                    `Ayat ${data.profile.weeklyVerse.ref} berhasil dibagikan.`
-                  )
-                }
-                className="inline-flex items-center gap-1 rounded-lg border border-amber-300 bg-white px-2.5 py-1 text-[11px] font-semibold text-amber-900 hover:bg-amber-100/70 dark:border-amber-800 dark:bg-stone-900 dark:text-amber-300 cursor-pointer"
-              >
-                <Share2 className="h-3 w-3" />
-                <span>Bagikan Ayat</span>
-              </button>
-            </div>
-            <p className="mt-2 font-reading text-base italic leading-relaxed text-stone-800 dark:text-stone-200">
-              {data.profile.weeklyVerse.text}
-            </p>
-            <p className="mt-3 text-xs font-semibold text-stone-600 dark:text-stone-400">
-              — {data.profile.weeklyVerse.ref}
-            </p>
-            <div className="mt-4 flex gap-2">
-              <button
-                type="button"
-                onClick={() => setRoute('alkitab')}
-                className="inline-flex min-h-[40px] flex-1 items-center justify-center rounded-xl border border-amber-300 bg-white px-3 text-xs font-semibold text-stone-800 hover:bg-amber-50 dark:border-amber-800 dark:bg-stone-900 dark:text-stone-200 cursor-pointer"
-              >
-                Baca Alkitab
-              </button>
-              <button
-                type="button"
-                onClick={() => setRoute('nyanyian')}
-                className="inline-flex min-h-[40px] flex-1 items-center justify-center rounded-xl bg-[#7F1D1D] px-3 text-xs font-semibold text-white hover:bg-[#68151B] cursor-pointer"
-              >
-                Kidung Pujian
-              </button>
-            </div>
-          </div>
+        {/* RIGHT COLUMN */}
+        <aside>
+          <KalenderKegiatanWidget schedules={data.schedules} />
         </aside>
       </div>
 

@@ -8,8 +8,9 @@ export const BIBLE_BOOKS: BibleBook[] = [
     chapters: [
       {
         chapter: 1,
+        title: 'Allah menciptakan langit dan bumi serta isinya',
         verses: [
-          { verse: 1, text: 'Pada mulanya Allah menciptakan langit dan bumi.' },
+          { verse: 1, title: 'Allah menciptakan langit dan bumi serta isinya', text: 'Pada mulanya Allah menciptakan langit dan bumi.' },
           { verse: 2, text: 'Bumi belum berbentuk dan kosong; gelap gulita menutupi samudera raya, dan Roh Allah melayang-layang di atas permukaan air.' },
           { verse: 3, text: 'Berfirmanlah Allah: "Jadilah terang." Lalu terang itu jadi.' },
           { verse: 4, text: 'Allah melihat bahwa terang itu baik, lalu dipisahkan-Nyalah terang itu dari gelap.' },
@@ -28,8 +29,9 @@ export const BIBLE_BOOKS: BibleBook[] = [
     chapters: [
       {
         chapter: 23,
+        title: 'TUHAN, gembalaku yang baik',
         verses: [
-          { verse: 1, text: 'Mazmur Daud. TUHAN adalah gembalaku, takkan kekurangan aku.' },
+          { verse: 1, title: 'TUHAN, gembalaku yang baik', text: 'Mazmur Daud. TUHAN adalah gembalaku, takkan kekurangan aku.' },
           { verse: 2, text: 'Ia membaringkan aku di padang yang berumput hijau, Ia membimbing aku ke air yang tenang;' },
           { verse: 3, text: 'Ia menyegarkan jiwaku. Ia menuntun aku di jalan yang benar oleh karena nama-Nya.' },
           { verse: 4, text: 'Sekalipun aku berjalan dalam lembah kekelaman, aku tidak takut bahaya, sebab Engkau besertaku; gada-Mu dan tongkat-Mu, itulah yang menghibur aku.' },
@@ -39,8 +41,9 @@ export const BIBLE_BOOKS: BibleBook[] = [
       },
       {
         chapter: 121,
+        title: 'TUHAN, Penjaga Israel',
         verses: [
-          { verse: 1, text: 'Nyanyian ziarah. Aku melayangkan mataku ke gunung-gunung; dari manakah akan datang pertolonganku?' },
+          { verse: 1, title: 'TUHAN, Penjaga Israel', text: 'Nyanyian ziarah. Aku melayangkan mataku ke gunung-gunung; dari manakah akan datang pertolonganku?' },
           { verse: 2, text: 'Pertolonganku ialah dari TUHAN, yang menjadikan langit dan bumi.' },
           { verse: 3, text: 'Ia takkan membiarkan kakimu goyah, Penjagamu tidak akan terlelap.' },
           { verse: 4, text: 'Sesungguhnya tidak terlelap dan tidak tertidur Penjaga Israel.' },

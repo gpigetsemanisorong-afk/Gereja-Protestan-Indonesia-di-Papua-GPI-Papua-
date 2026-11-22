@@ -87,6 +87,7 @@ export const AdminDashboardPage: React.FC = () => {
     currentUserRole,
     currentUsername,
     logoutAdmin,
+    openMenuSheet,
     googleUser,
     isGoogleConnected,
     isSyncingWorkspace,
@@ -126,7 +127,7 @@ export const AdminDashboardPage: React.FC = () => {
     allPrayers,
     updatePrayerStatusAndNote,
     deletePrayer,
-  } = usePrayerBox(currentUserRole !== 'jemaat');
+  } = usePrayerBox(currentUserRole !== 'jemaat' && currentUserRole !== null);
 
   const {
     dbStats: bibleDbStats,
@@ -258,27 +259,27 @@ export const AdminDashboardPage: React.FC = () => {
 
   if (currentUserRole === 'jemaat' || !currentUserRole) {
     return (
-      <div className="mx-auto max-w-md rounded-3xl border border-stone-200 bg-white p-8 text-center dark:border-stone-800 dark:bg-stone-900 shadow-sm">
-        <p className="text-sm font-semibold text-stone-800 dark:text-stone-200">
+      <div className="mx-auto max-w-md rounded-[28px] bg-white p-8 text-center shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22]">
+        <p className="text-sm font-bold text-stone-900 dark:text-stone-100">
           Anda belum masuk sebagai Majelis / Admin.
         </p>
-        <p className="mt-2 text-xs text-stone-500 dark:text-stone-400">
-          Dashboard ini khusus untuk pengurus Majelis Jemaat (Super User, Admin 1, atau Admin 2).
+        <p className="mt-2 text-xs leading-relaxed text-stone-500 dark:text-stone-400">
+          Silakan masuk melalui menu Pengaturan untuk mengedit warta, jadwal, liturgi, dan data jemaat.
         </p>
-        <div className="mt-5 flex items-center justify-center gap-3">
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5">
           <button
             type="button"
             onClick={() => setRoute('beranda')}
-            className="inline-flex min-h-[40px] items-center justify-center rounded-xl border border-stone-200 px-4 text-xs font-semibold text-stone-700 hover:bg-stone-50 dark:border-stone-700 dark:text-stone-300 dark:hover:bg-stone-800 cursor-pointer"
+            className="inline-flex min-h-[42px] items-center justify-center rounded-full bg-[#F4F6F9] px-5 text-xs font-semibold text-stone-700 hover:bg-stone-200 dark:bg-[#1E232D] dark:text-stone-200 dark:hover:bg-stone-800 cursor-pointer"
           >
             Ke Beranda
           </button>
           <button
             type="button"
-            onClick={logoutAdmin}
-            className="inline-flex min-h-[40px] items-center justify-center rounded-xl bg-[#7F1D1D] px-4 text-xs font-semibold text-white hover:bg-[#68151B] cursor-pointer"
+            onClick={() => openMenuSheet(true)}
+            className="inline-flex min-h-[42px] items-center justify-center rounded-full bg-[#7F1D1D] px-5 text-xs font-semibold text-white hover:bg-[#68151B] cursor-pointer"
           >
-            Ganti Akun Admin
+            Masuk di Pengaturan
           </button>
         </div>
       </div>

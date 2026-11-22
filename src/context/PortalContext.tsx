@@ -64,6 +64,10 @@ interface PortalContextValue {
   loginAdmin: (username: string, password: string) => { ok: boolean; message: string };
   loginDemo: (username: 'superuser' | 'admin1' | 'admin2' | 'jemaat') => void;
   logoutAdmin: () => void;
+  menuOpen: boolean;
+  focusAdminLogin: boolean;
+  openMenuSheet: (focusLogin?: boolean) => void;
+  closeMenuSheet: () => void;
   // Google Workspace
   googleUser: User | null;
   isGoogleConnected: boolean;
@@ -228,8 +232,20 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [isGoogleConnected, setIsGoogleConnected] = useState(false);
   const [isSyncingWorkspace, setIsSyncingWorkspace] = useState(false);
   const [workspaceNotice, setWorkspaceNotice] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [focusAdminLogin, setFocusAdminLogin] = useState(false);
 
   const syncTimerRef = useRef<number | null>(null);
+
+  const openMenuSheet = useCallback((focusLogin = false) => {
+    setFocusAdminLogin(focusLogin);
+    setMenuOpen(true);
+  }, []);
+
+  const closeMenuSheet = useCallback(() => {
+    setMenuOpen(false);
+    setFocusAdminLogin(false);
+  }, []);
 
   // Apply Dark Mode class on <html>
   useEffect(() => {
@@ -445,7 +461,7 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         actorOverride: account.username,
         roleOverride: account.role,
       });
-      setRoute('beranda');
+      setRoute(account.role === 'jemaat' ? 'beranda' : 'dashboard');
       return { ok: true, message: `Selamat datang, ${account.displayName}.` };
     },
     [data.adminAccounts, logActivity, setRoute]
@@ -468,7 +484,7 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         actorOverride: account.username,
         roleOverride: account.role,
       });
-      setRoute('beranda');
+      setRoute(account.role === 'jemaat' ? 'beranda' : 'dashboard');
     },
     [data.adminAccounts, logActivity, setRoute]
   );
@@ -479,14 +495,14 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     logActivity({
       category: 'Autentikasi',
       action: 'Logout',
-      detail: `Pengguna ${prevUser} keluar dari sistem portal.`,
+      detail: `Pengguna ${prevUser} keluar dari sesi admin.`,
       actorOverride: prevUser,
       roleOverride: prevRole || 'jemaat',
     });
     setCurrentUserRole(null);
     setCurrentUsername(null);
     sessionStorage.removeItem(AUTH_SESSION_KEY);
-    setRoute('login');
+    setRoute('beranda');
   }, [currentUserRole, currentUsername, logActivity, setRoute]);
 
   const refreshLogoFromDriveInternal = useCallback(
@@ -894,6 +910,10 @@ export const PortalProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         loginAdmin,
         loginDemo,
         logoutAdmin,
+        menuOpen,
+        focusAdminLogin,
+        openMenuSheet,
+        closeMenuSheet,
         googleUser,
         isGoogleConnected,
         isSyncingWorkspace,

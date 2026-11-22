@@ -186,7 +186,7 @@ export const StatistikJemaatCharts: React.FC<StatistikJemaatChartsProps> = ({
 
   if (rows.length === 0) {
     return (
-      <div className="rounded-2xl border border-stone-200 bg-white p-8 text-center text-sm text-stone-500 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-400">
+      <div className="rounded-[24px] bg-white p-8 text-center text-sm text-stone-500 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22] dark:text-stone-400">
         Belum ada data statistik jemaat untuk divisualisasikan.
       </div>
     );
@@ -195,7 +195,7 @@ export const StatistikJemaatCharts: React.FC<StatistikJemaatChartsProps> = ({
   return (
     <div className="space-y-6">
       {/* Header & Interactive Filters */}
-      <div className="flex flex-col gap-4 rounded-2xl border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-900 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 rounded-[24px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22] sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="flex items-center gap-2 text-base font-bold text-stone-900 dark:text-stone-100 sm:text-lg">
             <BarChart3 className="h-5 w-5 text-[#7F1D1D] dark:text-amber-400" />
@@ -212,10 +212,10 @@ export const StatistikJemaatCharts: React.FC<StatistikJemaatChartsProps> = ({
                 key={sektor}
                 type="button"
                 onClick={() => setSelectedSektor(sektor)}
-                className={`min-h-[36px] rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
+                className={`min-h-[36px] rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
                   active
                     ? 'bg-[#7F1D1D] text-white dark:bg-amber-500 dark:text-stone-950'
-                    : 'bg-stone-100 text-stone-700 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700'
+                    : 'bg-[#F4F6F9] text-stone-700 hover:bg-stone-200/80 dark:bg-[#1E232D] dark:text-stone-300 dark:hover:bg-stone-800'
                 }`}
               >
                 {sektor}
@@ -226,9 +226,9 @@ export const StatistikJemaatCharts: React.FC<StatistikJemaatChartsProps> = ({
       </div>
 
       {/* Main Charts Grid */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.35fr_1fr]">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.35fr_1fr]">
         {/* Chart 1: Interactive Unit Bar Chart */}
-        <section className="rounded-2xl border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-900">
+        <section className="rounded-[24px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22]">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100">
@@ -243,13 +243,13 @@ export const StatistikJemaatCharts: React.FC<StatistikJemaatChartsProps> = ({
               </p>
             </div>
 
-            <div className="inline-flex rounded-xl border border-stone-200 bg-stone-50 p-1 dark:border-stone-700 dark:bg-stone-800">
+            <div className="inline-flex rounded-full bg-[#F4F6F9] p-1 dark:bg-[#1E232D]">
               <button
                 type="button"
                 onClick={() => setChartMode('jiwa_kk')}
-                className={`inline-flex min-h-[32px] items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold transition-colors cursor-pointer ${
+                className={`inline-flex min-h-[34px] items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-colors cursor-pointer ${
                   chartMode === 'jiwa_kk'
-                    ? 'bg-white text-[#7F1D1D] shadow-xs dark:bg-stone-900 dark:text-amber-400'
+                    ? 'bg-white text-[#7F1D1D] shadow-xs dark:bg-[#161A22] dark:text-amber-400'
                     : 'text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-200'
                 }`}
               >
@@ -259,14 +259,14 @@ export const StatistikJemaatCharts: React.FC<StatistikJemaatChartsProps> = ({
               <button
                 type="button"
                 onClick={() => setChartMode('unsur')}
-                className={`inline-flex min-h-[32px] items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold transition-colors cursor-pointer ${
+                className={`inline-flex min-h-[34px] items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-colors cursor-pointer ${
                   chartMode === 'unsur'
-                    ? 'bg-white text-[#7F1D1D] shadow-xs dark:bg-stone-900 dark:text-amber-400'
+                    ? 'bg-white text-[#7F1D1D] shadow-xs dark:bg-[#161A22] dark:text-amber-400'
                     : 'text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-200'
                 }`}
               >
                 <Layers className="h-3.5 w-3.5" />
-                <span>Per Unsur</span>
+                <span>Per Wadah</span>
               </button>
             </div>
           </div>
@@ -349,13 +349,13 @@ export const StatistikJemaatCharts: React.FC<StatistikJemaatChartsProps> = ({
         </section>
 
         {/* Chart 2: Interactive Donut Chart Komposisi Unsur */}
-        <section className="rounded-2xl border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-900">
+        <section className="rounded-[24px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22]">
           <h3 className="flex items-center gap-2 text-sm font-bold text-stone-900 dark:text-stone-100">
             <PieChartIcon className="h-4 w-4 text-[#7F1D1D] dark:text-amber-400" />
             <span>Proporsi Wadah Kategorial</span>
           </h3>
           <p className="mt-0.5 text-xs text-stone-500 dark:text-stone-400">
-            Sorot atau klik unsur untuk melihat rincian jumlah jiwa.
+            Sorot atau klik kategori untuk melihat rincian jumlah jiwa.
           </p>
 
           <div className="relative mt-2 h-[220px] w-full">
@@ -451,11 +451,11 @@ export const StatistikJemaatCharts: React.FC<StatistikJemaatChartsProps> = ({
 
       {/* Sector Comparison Strip (when more than 1 sector exists) */}
       {sectorComparisonData.length > 1 && (
-        <section className="rounded-2xl border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-900">
+        <section className="rounded-[24px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22]">
           <h3 className="text-sm font-bold text-stone-900 dark:text-stone-100">
             Ringkasan Perbandingan Antar Sektor
           </h3>
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-4 grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
             {sectorComparisonData.map((sec) => {
               const totalAllJiwa = sectorComparisonData.reduce((s, c) => s + c.jiwa, 0);
               const sharePct = totalAllJiwa > 0 ? Math.round((sec.jiwa / totalAllJiwa) * 100) : 0;
@@ -466,10 +466,10 @@ export const StatistikJemaatCharts: React.FC<StatistikJemaatChartsProps> = ({
                   onClick={() =>
                     setSelectedSektor((prev) => (prev === sec.sektor ? 'Semua' : sec.sektor))
                   }
-                  className={`rounded-xl border p-4 text-left transition-colors cursor-pointer ${
+                  className={`rounded-2xl p-4 text-left transition-colors cursor-pointer ${
                     effectiveSektor === sec.sektor
-                      ? 'border-[#7F1D1D] bg-amber-50/60 dark:border-amber-500 dark:bg-amber-950/20'
-                      : 'border-stone-200 bg-stone-50/50 hover:border-stone-300 dark:border-stone-800 dark:bg-stone-800/40'
+                      ? 'bg-[#7F1D1D]/8 ring-1 ring-[#7F1D1D]/30 dark:bg-amber-500/12 dark:ring-amber-500/40'
+                      : 'bg-[#F4F6F9] hover:bg-stone-200/60 dark:bg-[#1E232D] dark:hover:bg-stone-800'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">

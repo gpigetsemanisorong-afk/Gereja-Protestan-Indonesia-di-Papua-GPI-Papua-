@@ -5,6 +5,11 @@ import {
   TOTAL_CANONICAL_BOOKS,
   TOTAL_CANONICAL_CHAPTERS,
 } from '../data/bibleBooksCatalog';
+import {
+  enrichVersesWithPericopes,
+  getVersePericopeTitle,
+  resolveActivePericopeTitle,
+} from '../data/biblePericopes';
 import { BibleVerse } from '../types/church';
 
 const DB_NAME = 'gpi_getsemani_bible_db';
@@ -23,10 +28,25 @@ export interface StoredBibleChapter {
   bookSlug: string;
   bookName: string;
   chapter: number;
+  title?: string;
   verses: BibleVerse[];
   source: BibleChapterSource;
   isPartialSeed?: boolean;
   updatedAt: string;
+}
+
+function withPericopes(entry: StoredBibleChapter): StoredBibleChapter {
+  const verses = enrichVersesWithPericopes(entry.bookId, entry.chapter, entry.verses);
+  const firstVerseNum = verses[0]?.verse ?? 1;
+  const resolvedTitle =
+    entry.title?.trim() ||
+    verses.find((v) => v.title)?.title ||
+    resolveActivePericopeTitle(entry.bookId, entry.chapter, firstVerseNum)?.title;
+  return {
+    ...entry,
+    title: resolvedTitle,
+    verses,
+  };
 }
 
 export interface BibleDbStats {
@@ -47,6 +67,7 @@ export interface BibleSearchResult {
   chapter: number;
   verse: number;
   text: string;
+  title?: string;
 }
 
 export interface BibleDownloadProgress {
@@ -209,17 +230,20 @@ export async function initBibleDatabase(): Promise<void> {
       for (const ch of book.chapters) {
         const existing = await getChapterFromDb(meta.bookId, ch.chapter);
         if (!existing) {
-          toSeed.push({
-            key: makeChapterKey(meta.bookId, ch.chapter),
-            bookId: meta.bookId,
-            bookSlug: meta.id,
-            bookName: meta.name,
-            chapter: ch.chapter,
-            verses: ch.verses,
-            source: 'seed',
-            isPartialSeed: true,
-            updatedAt: seededAt,
-          });
+          toSeed.push(
+            withPericopes({
+              key: makeChapterKey(meta.bookId, ch.chapter),
+              bookId: meta.bookId,
+              bookSlug: meta.id,
+              bookName: meta.name,
+              chapter: ch.chapter,
+              title: ch.title,
+              verses: ch.verses,
+              source: 'seed',
+              isPartialSeed: true,
+              updatedAt: seededAt,
+            })
+          );
         }
       }
     }
@@ -361,12 +385,12 @@ export async function loadBibleChapter(options: {
 
   // Serve directly from offline database when complete (not partial seed) or when offline
   if (cached && !forceRefresh && (!cached.isPartialSeed || !isOnline)) {
-    return { chapterData: cached, fromCache: true };
+    return { chapterData: withPericopes(cached), fromCache: true };
   }
 
   if (!isOnline) {
     if (cached) {
-      return { chapterData: cached, fromCache: true };
+      return { chapterData: withPericopes(cached), fromCache: true };
     }
     return {
       chapterData: null,
@@ -393,7 +417,7 @@ export async function loadBibleChapter(options: {
       throw new Error('Data ayat tidak ditemukan untuk pasal tersebut.');
     }
 
-    const stored: StoredBibleChapter = {
+    const stored = withPericopes({
       key: makeChapterKey(meta.bookId, chapter),
       bookId: meta.bookId,
       bookSlug: meta.id,
@@ -403,14 +427,14 @@ export async function loadBibleChapter(options: {
       source: 'api',
       isPartialSeed: false,
       updatedAt: new Date().toISOString(),
-    };
+    });
 
     await saveChapterToDb(stored);
     return { chapterData: stored, fromCache: false };
   } catch (err) {
     if (cached) {
       return {
-        chapterData: cached,
+        chapterData: withPericopes(cached),
         fromCache: true,
         error:
           err instanceof Error
@@ -506,17 +530,19 @@ export async function downloadFullBibleOffline(
     const meta = findBibleBookMeta(bucket.bookId);
     if (!meta) continue;
     bucket.verses.sort((a, b) => a.verse - b.verse);
-    entries.push({
-      key: makeChapterKey(meta.bookId, bucket.chapter),
-      bookId: meta.bookId,
-      bookSlug: meta.id,
-      bookName: meta.name,
-      chapter: bucket.chapter,
-      verses: bucket.verses,
-      source: 'full-pack',
-      isPartialSeed: false,
-      updatedAt: now,
-    });
+    entries.push(
+      withPericopes({
+        key: makeChapterKey(meta.bookId, bucket.chapter),
+        bookId: meta.bookId,
+        bookSlug: meta.id,
+        bookName: meta.name,
+        chapter: bucket.chapter,
+        verses: bucket.verses,
+        source: 'full-pack',
+        isPartialSeed: false,
+        updatedAt: now,
+      })
+    );
   }
 
   const totalEntries = entries.length;
@@ -570,7 +596,11 @@ export async function searchBibleVersesOffline(
       if (testament !== 'Semua' && meta.testament !== testament) continue;
       if (filterBookId && ch.bookId !== filterBookId) continue;
       for (const v of ch.verses) {
-        if (v.text.toLowerCase().includes(q)) {
+        const vTitle = v.title || getVersePericopeTitle(ch.bookId, ch.chapter, v.verse);
+        if (
+          v.text.toLowerCase().includes(q) ||
+          (vTitle && vTitle.toLowerCase().includes(q))
+        ) {
           results.push({
             bookId: ch.bookId,
             bookName: meta.name,
@@ -578,6 +608,7 @@ export async function searchBibleVersesOffline(
             chapter: ch.chapter,
             verse: v.verse,
             text: v.text,
+            title: vTitle,
           });
           if (results.length >= limit) return results;
         }
@@ -609,7 +640,11 @@ export async function searchBibleVersesOffline(
           (!filterBookId || ch.bookId === filterBookId)
         ) {
           for (const v of ch.verses) {
-            if (v.text.toLowerCase().includes(q)) {
+            const vTitle = v.title || getVersePericopeTitle(ch.bookId, ch.chapter, v.verse);
+            if (
+              v.text.toLowerCase().includes(q) ||
+              (vTitle && vTitle.toLowerCase().includes(q))
+            ) {
               results.push({
                 bookId: ch.bookId,
                 bookName: meta.name,
@@ -617,6 +652,7 @@ export async function searchBibleVersesOffline(
                 chapter: ch.chapter,
                 verse: v.verse,
                 text: v.text,
+                title: vTitle,
               });
               if (results.length >= limit) break;
             }
@@ -651,6 +687,9 @@ export async function importBibleFromRows(
   const colText = headers.findIndex(
     (h) => h.includes('teks') || h.includes('isi') || h.includes('text')
   );
+  const colTitle = headers.findIndex(
+    (h) => h.includes('judul') || h.includes('perikop') || h.includes('title')
+  );
 
   const idxBook = colBook >= 0 ? colBook : 0;
   const idxChapter = colChapter >= 0 ? colChapter : 1;
@@ -666,6 +705,8 @@ export async function importBibleFromRows(
     const chapterNum = parseInt(String(r[idxChapter] || ''), 10);
     const verseNum = parseInt(String(r[idxVerse] || ''), 10);
     const verseText = cleanVerseText(String(r[idxText] || ''));
+    const verseTitle =
+      colTitle >= 0 ? cleanVerseText(String(r[colTitle] || '')) : '';
 
     if (!bookRaw || !chapterNum || !verseNum || !verseText) continue;
     const meta = findBibleBookMeta(bookRaw);
@@ -677,7 +718,13 @@ export async function importBibleFromRows(
       bucket = { bookId: meta.bookId, chapter: chapterNum, verses: [] };
       grouped.set(key, bucket);
     }
-    bucket.verses.push({ verse: verseNum, text: verseText });
+    const resolvedTitle =
+      verseTitle || getVersePericopeTitle(meta.bookId, chapterNum, verseNum);
+    bucket.verses.push(
+      resolvedTitle
+        ? { verse: verseNum, text: verseText, title: resolvedTitle }
+        : { verse: verseNum, text: verseText }
+    );
     versesSaved += 1;
   }
 
@@ -687,17 +734,19 @@ export async function importBibleFromRows(
     const meta = findBibleBookMeta(bucket.bookId);
     if (!meta) continue;
     bucket.verses.sort((a, b) => a.verse - b.verse);
-    entries.push({
-      key: makeChapterKey(meta.bookId, bucket.chapter),
-      bookId: meta.bookId,
-      bookSlug: meta.id,
-      bookName: meta.name,
-      chapter: bucket.chapter,
-      verses: bucket.verses,
-      source,
-      isPartialSeed: false,
-      updatedAt: now,
-    });
+    entries.push(
+      withPericopes({
+        key: makeChapterKey(meta.bookId, bucket.chapter),
+        bookId: meta.bookId,
+        bookSlug: meta.id,
+        bookName: meta.name,
+        chapter: bucket.chapter,
+        verses: bucket.verses,
+        source,
+        isPartialSeed: false,
+        updatedAt: now,
+      })
+    );
   }
 
   if (entries.length === 0) {

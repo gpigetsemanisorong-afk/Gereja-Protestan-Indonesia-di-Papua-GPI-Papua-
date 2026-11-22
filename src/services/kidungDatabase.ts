@@ -4,6 +4,32 @@ const DB_NAME = 'gpi_getsemani_kidung_db';
 const DB_VERSION = 1;
 const STORE_HYMNS = 'hymns';
 const STORE_META = 'meta';
+const DATASET_VERSION = '2026-11-full-v1';
+
+const LEGACY_SAMPLE_IDS = new Set([
+  'nr-1',
+  'kj-1',
+  'kj-2',
+  'kj-3',
+  'kj-64',
+  'pkj-1',
+  'pkj-2',
+  'nkb-3',
+  'dsl-12',
+  'kj-24',
+  'kj-36',
+  'nkb-15',
+  'pkj-15',
+  'dsl-25',
+]);
+
+const BOOK_ORDER: Record<HymnBook, number> = {
+  KJ: 1,
+  PKJ: 2,
+  NKB: 3,
+  DSL: 4,
+  NR: 5,
+};
 
 export interface KidungDbStats {
   cachedHymnsCount: number;
@@ -12,40 +38,19 @@ export interface KidungDbStats {
   isOfflineReady: boolean;
 }
 
-// Built-in offline seed pack with rich hymns across KJ, NKB, PKJ, DSL, NR
+// Minimal emergency fallback if dynamic collection chunk fails
 export const DEFAULT_OFFLINE_HYMNS: Hymn[] = [
-  {
-    id: 'nr-1',
-    book: 'NR',
-    number: 1,
-    title: 'Haleluya, Pujilah Tuhan',
-    keySignature: 'Do = F (4/4)',
-    verses: [
-      {
-        number: 1,
-        text: 'Haleluya, pujilah Tuhan, hai jiwaku, pujilah Dia!\nSelama hidupku ku hendak memuji Tuhan Allahku.\nKu bermazmur bagi-Nya selagi ada nyawaku!',
-      },
-      {
-        number: 2,
-        text: 'Janganlah harap pada raja atau anak manusia;\ntiada dapat ia menolong bila maut menjelang.\nBerbahagia orang yang Penolongnya Allah Yakub!',
-      },
-      {
-        number: 3,
-        text: 'Tuhan yang menjadikan langit, bumi, laut serta isinya;\nIa tetap setia menjaga kebenaran-Nya.\nIa membela orang tertindas, memberi roti kepada yang lapar.',
-      },
-    ],
-  },
   {
     id: 'kj-1',
     book: 'KJ',
     number: 1,
     title: 'Haleluya, Pujilah',
-    keySignature: 'Do = G (4/4)',
-    chorus: 'Haleluya, pujilah Allah yang Agung, Mahaesa!\nDalam Kristus kita kenal Allah yang hidup, Bapa kekal!',
+    keySignature: '1=F · 4/4',
+    chorus: 'Haleluya! Pujilah Allah Yang Agung, Maha Esa!\nDalam Kristus kita kenal Allah Yang Hidup, Bapa kekal!',
     verses: [
       {
         number: 1,
-        text: 'Langit, buana semesta patut memuji kuasa-Nya,\nkarna berkat-Nya tak henti, limpah kasih-Nya tak terperi.',
+        text: 'Langit, buana semesta patut memuji kuasaNya,\nkarna berkatNya tak henti, limpah kasihNya tak terperi.',
       },
       {
         number: 2,
@@ -53,119 +58,37 @@ export const DEFAULT_OFFLINE_HYMNS: Hymn[] = [
       },
     ],
   },
-  {
-    id: 'kj-2',
-    book: 'KJ',
-    number: 2,
-    title: 'Sembah Sujud pada-Nya',
-    keySignature: 'Do = F (3/4)',
-    verses: [
-      {
-        number: 1,
-        text: 'Sembah sujud pada-Nya, Tuhan yang Mahakuasa!\nBawa persembahan syukur ke hadirat takhta-Nya.',
-      },
-      {
-        number: 2,
-        text: 'Muliakan nama-Nya yang besar di bumi dan di sorga!\nKasih setia-Nya tetap selama-lamanya.',
-      },
-    ],
-  },
-  {
-    id: 'kj-3',
-    book: 'KJ',
-    number: 3,
-    title: 'Kami Puji dengan Riang',
-    keySignature: 'Do = G (4/4)',
-    verses: [
-      {
-        number: 1,
-        text: 'Kami puji dengan riang Dikau, Allah yang besar;\nbagai bunga trima siang, hati kami pun mekar.\nKabut dosa dan derita, kebimbangan, tlah lenyap.\nSumber suka yang abadi, bri sinar-Mu menyerap.',
-      },
-      {
-        number: 2,
-        text: 'Kau membritakan kasih-Mu lewat karya-Mu megah;\nbintang, bumi, dan samudra turut memuliakan-Nya.\nGunung, lembah, dan hutan, padang hijau berseri,\nmengumandangkan pujian bagi Allah yang suci.',
-      },
-    ],
-  },
-  {
-    id: 'kj-64',
-    book: 'KJ',
-    number: 64,
-    title: 'Bila Kulihat Bintang Gemerlapan',
-    keySignature: 'Do = Bes (4/4)',
-    chorus: 'Maka jiwaku pun memuji-Mu: Sungguh besar Kau, Allahku!\nMaka jiwaku pun memuji-Mu: Sungguh besar Kau, Allahku!',
-    verses: [
-      {
-        number: 1,
-        text: 'Bila kulihat bintang gemerlapan dan bunyi guruh riuh kudengar,\nya Tuhanku, tak putus aku heran melihat ciptaan-Mu yang besar.',
-      },
-      {
-        number: 2,
-        text: 'Ya Tuhanku, pabila kurenungkan pemberian-Mu dalam Penebus,\nku tertegun: bagiku dicurahkan oleh Putra-Mu darah-Nya kudus.',
-      },
-    ],
-  },
-  {
-    id: 'pkj-1',
-    book: 'PKJ',
-    number: 1,
-    title: 'Abadi Tak Bernora',
-    keySignature: 'Do = C (4/4)',
-    verses: [
-      {
-        number: 1,
-        text: 'Abadi tak bernora, ya Allah Bapa kami,\nsembah dan puji syukur kami naikkan pada-Mu.',
-      },
-    ],
-  },
-  {
-    id: 'pkj-2',
-    book: 'PKJ',
-    number: 2,
-    title: 'Mulia, Mulia Nama-Nya',
-    keySignature: 'Do = G (4/4)',
-    verses: [
-      {
-        number: 1,
-        text: 'Mulia, mulia nama-Nya, bagi Yesus kemuliaan dan puji!\nMulia, nama-Nya yang besar, agungkan Yesus, Raja semesta!',
-      },
-    ],
-  },
-  {
-    id: 'nkb-3',
-    book: 'NKB',
-    number: 3,
-    title: 'Terpujilah Allah',
-    keySignature: 'Do = D (4/4)',
-    chorus: 'Terpujilah Allah, hikmat-Nya besar!\nBeri puji kepada-Mu lewat Anak-Mu Penebus.',
-    verses: [
-      {
-        number: 1,
-        text: 'Terpujilah Allah, hikmat-Nya besar, karena karunia Putra-Nya benar,\nyang mati menebus dosa dunia dan membuka jalan ke sorga baka.',
-      },
-    ],
-  },
-  {
-    id: 'dsl-12',
-    book: 'DSL',
-    number: 12,
-    title: 'Yesus Kawan yang Sejati',
-    keySignature: 'Do = F (6/8)',
-    verses: [
-      {
-        number: 1,
-        text: 'Yesus kawan yang sejati bagi kita yang lemah;\ntiaphari dibawanya s’gala susah pada-Nya.\nB’rapa susah percuma, beban kita t’rus berat,\nkarna kita tak berdoa pada Tuhan yang dekat.',
-      },
-      {
-        number: 2,
-        text: 'Jika engkau dicobai dan penanggungmu berat,\njangan kau putus asa: pada Tuhan berseru!\nYesus kawan yang sejati, Ia tahu kelemahanmu;\nla sedia memb’ri rahmat, basuh s’gala dosamu.',
-      },
-    ],
-  },
 ];
 
+let cachedFullCollection: Hymn[] | null = null;
+
+export async function loadFullKidungCollection(): Promise<Hymn[]> {
+  if (cachedFullCollection) return cachedFullCollection;
+  try {
+    const mod = await import('../data/kidungCollection.json');
+    const list = (mod.default || mod) as Hymn[];
+    if (Array.isArray(list) && list.length > 0) {
+      cachedFullCollection = list;
+      return list;
+    }
+  } catch {
+    // Fall back cleanly if chunk fails to load
+  }
+  return DEFAULT_OFFLINE_HYMNS;
+}
+
+function sortHymns(list: Hymn[]): Hymn[] {
+  return [...list].sort((a, b) => {
+    const orderA = BOOK_ORDER[a.book] ?? 99;
+    const orderB = BOOK_ORDER[b.book] ?? 99;
+    if (orderA !== orderB) return orderA - orderB;
+    if (a.number !== b.number) return a.number - b.number;
+    return (a.codeLabel || '').localeCompare(b.codeLabel || '');
+  });
+}
+
 let dbPromise: Promise<IDBDatabase | null> | null = null;
-let memoryFallbackHymns: Hymn[] = [...DEFAULT_OFFLINE_HYMNS];
+let memoryFallbackHymns: Hymn[] = [];
 
 function openKidungDb(): Promise<IDBDatabase | null> {
   if (typeof indexedDB === 'undefined') {
@@ -195,32 +118,69 @@ function openKidungDb(): Promise<IDBDatabase | null> {
   return dbPromise;
 }
 
-export async function getAllHymnsFromDb(): Promise<Hymn[]> {
-  const db = await openKidungDb();
-  if (!db) {
-    return memoryFallbackHymns;
-  }
+async function getMetaValue(db: IDBDatabase, key: string): Promise<string | null> {
   return new Promise((resolve) => {
     try {
-      const tx = db.transaction(STORE_HYMNS, 'readonly');
-      const req = tx.objectStore(STORE_HYMNS).getAll();
-      req.onsuccess = () => {
-        const result = (req.result || []) as Hymn[];
-        if (result.length === 0) {
-          resolve(DEFAULT_OFFLINE_HYMNS);
-        } else {
-          resolve(result);
-        }
-      };
-      req.onerror = () => resolve(memoryFallbackHymns);
+      const tx = db.transaction(STORE_META, 'readonly');
+      const req = tx.objectStore(STORE_META).get(key);
+      req.onsuccess = () => resolve(req.result ? (req.result.value as string) : null);
+      req.onerror = () => resolve(null);
     } catch {
-      resolve(memoryFallbackHymns);
+      resolve(null);
     }
   });
 }
 
+async function readAllRawFromDb(db: IDBDatabase): Promise<Hymn[]> {
+  return new Promise((resolve) => {
+    try {
+      const tx = db.transaction(STORE_HYMNS, 'readonly');
+      const req = tx.objectStore(STORE_HYMNS).getAll();
+      req.onsuccess = () => resolve((req.result || []) as Hymn[]);
+      req.onerror = () => resolve([]);
+    } catch {
+      resolve([]);
+    }
+  });
+}
+
+export async function getAllHymnsFromDb(): Promise<Hymn[]> {
+  const db = await openKidungDb();
+  if (!db) {
+    if (memoryFallbackHymns.length === 0) {
+      memoryFallbackHymns = await loadFullKidungCollection();
+    }
+    return memoryFallbackHymns;
+  }
+
+  const [existing, storedVersion] = await Promise.all([
+    readAllRawFromDb(db),
+    getMetaValue(db, 'datasetVersion'),
+  ]);
+
+  if (existing.length > 0 && storedVersion === DATASET_VERSION) {
+    return sortHymns(existing);
+  }
+
+  // Initial seed or upgrade from legacy 9-14 song seed to full KJ/PKJ/NKB/DSL/NR collection
+  const fullPack = await loadFullKidungCollection();
+  const map = new Map<string, Hymn>();
+
+  fullPack.forEach((h) => map.set(h.id, h));
+  existing.forEach((h) => {
+    if (!LEGACY_SAMPLE_IDS.has(h.id) && !map.has(h.id)) {
+      map.set(h.id, h);
+    }
+  });
+
+  const merged = sortHymns(Array.from(map.values()));
+  await saveHymnsToDb(merged);
+  return merged;
+}
+
 export async function saveHymnsToDb(hymns: Hymn[]): Promise<void> {
-  memoryFallbackHymns = [...hymns];
+  const sorted = sortHymns(hymns);
+  memoryFallbackHymns = [...sorted];
   const db = await openKidungDb();
   if (!db) return;
 
@@ -229,10 +189,11 @@ export async function saveHymnsToDb(hymns: Hymn[]): Promise<void> {
       const tx = db.transaction([STORE_HYMNS, STORE_META], 'readwrite');
       const store = tx.objectStore(STORE_HYMNS);
       store.clear();
-      hymns.forEach((h) => store.put(h));
+      sorted.forEach((h) => store.put(h));
 
       const metaStore = tx.objectStore(STORE_META);
       metaStore.put({ key: 'lastUpdatedAt', value: new Date().toISOString() });
+      metaStore.put({ key: 'datasetVersion', value: DATASET_VERSION });
 
       tx.oncomplete = () => resolve();
       tx.onerror = () => resolve();
@@ -278,23 +239,14 @@ export async function getKidungDbStats(): Promise<KidungDbStats> {
   let lastUpdatedAt: string | null = null;
   const db = await openKidungDb();
   if (db) {
-    lastUpdatedAt = await new Promise((resolve) => {
-      try {
-        const tx = db.transaction(STORE_META, 'readonly');
-        const req = tx.objectStore(STORE_META).get('lastUpdatedAt');
-        req.onsuccess = () => resolve(req.result ? (req.result.value as string) : null);
-        req.onerror = () => resolve(null);
-      } catch {
-        resolve(null);
-      }
-    });
+    lastUpdatedAt = await getMetaValue(db, 'lastUpdatedAt');
   }
 
   return {
     cachedHymnsCount: hymns.length,
     booksCount,
     lastUpdatedAt,
-    isOfflineReady: hymns.length >= 5,
+    isOfflineReady: hymns.length >= 1000,
   };
 }
 
@@ -314,6 +266,7 @@ export async function importKidungFromJsonString(jsonStr: string): Promise<{ cou
       id: h.id || `${(h.book || 'KJ').toLowerCase()}-${h.number || idx + 1}`,
       book: (h.book || 'KJ').toUpperCase() as HymnBook,
       number: Number(h.number) || idx + 1,
+      ...(h.codeLabel ? { codeLabel: h.codeLabel } : {}),
       title: h.title || `Kidung Tanpa Judul ${idx + 1}`,
       keySignature: h.keySignature || 'Do = C',
       chorus: h.chorus,
@@ -325,11 +278,7 @@ export async function importKidungFromJsonString(jsonStr: string): Promise<{ cou
     existing.forEach((h) => map.set(h.id, h));
     validated.forEach((h) => map.set(h.id, h));
 
-    const merged = Array.from(map.values()).sort((a, b) => {
-      if (a.book !== b.book) return a.book.localeCompare(b.book);
-      return a.number - b.number;
-    });
-
+    const merged = sortHymns(Array.from(map.values()));
     await saveHymnsToDb(merged);
     return { count: validated.length };
   } catch (err: any) {
@@ -351,75 +300,21 @@ export async function exportKidungAsJsonString(): Promise<string> {
   );
 }
 
-// Generate extended offline sample hymn pack if downloading full offline pack
+// Download & update full offline collection across KJ, PKJ, NKB, DSL, NR
 export async function downloadFullKidungPackOffline(): Promise<{ count: number }> {
-  const existing = await getAllHymnsFromDb();
+  const db = await openKidungDb();
+  const existing = db ? await readAllRawFromDb(db) : memoryFallbackHymns;
+  const fullPack = await loadFullKidungCollection();
+
   const map = new Map<string, Hymn>();
-  existing.forEach((h) => map.set(h.id, h));
-
-  // Add more sample hymns for KJ, NKB, PKJ, DSL, NR to ensure comprehensive offline coverage
-  const extendedSamples: Hymn[] = [
-    ...DEFAULT_OFFLINE_HYMNS,
-    {
-      id: 'kj-24',
-      book: 'KJ',
-      number: 24,
-      title: 'Tritunggal, Allah Mahaagung',
-      keySignature: 'Do = G (4/4)',
-      verses: [
-        { number: 1, text: 'Tritunggal, Allah Mahaagung, kami sembah sujud di hadapan-mu.\nEngkau Bapa, Putra, dan Roh Kudus, sumber hidup dan kasih kekal.' },
-      ],
-    },
-    {
-      id: 'kj-36',
-      book: 'KJ',
-      number: 36,
-      title: 'Kepada Allah Pujian',
-      keySignature: 'Do = F (3/4)',
-      verses: [
-        { number: 1, text: 'Kepada Allah pujian di sorga dan di bumi t’rus!\nBesarkan nama-Nya kudus, agungkan kasih-Nya tulus.' },
-      ],
-    },
-    {
-      id: 'nkb-15',
-      book: 'NKB',
-      number: 15,
-      title: 'Menjulang Tinggi Langit Biru',
-      keySignature: 'Do = C (4/4)',
-      chorus: 'Yesus Tuhanku, Dialah Penebusku!\nKupuji nama-Nya selamanya.',
-      verses: [
-        { number: 1, text: 'Menjulang tinggi langit biru, megah ciptaan Tuhan Allahku;\nnamun kasih-Mu padaku jauh melebihi langit itu.' },
-      ],
-    },
-    {
-      id: 'pkj-15',
-      book: 'PKJ',
-      number: 15,
-      title: 'Kusiapkan Hatiku, Tuhan',
-      keySignature: 'Do = F (4/4)',
-      chorus: 'Firman-Mu Tuhan, kuingin dengar,\nresap di hati kuduskan daku.',
-      verses: [
-        { number: 1, text: 'Kusiapkan hatiku, Tuhan, menyambut firman-Mu saat ini.\nAku sujud menyembah Dikau, tenangkan pikiran dan hatiku.' },
-      ],
-    },
-    {
-      id: 'dsl-25',
-      book: 'DSL',
-      number: 25,
-      title: 'Bila Perang S’lesai',
-      keySignature: 'Do = G (4/4)',
-      verses: [
-        { number: 1, text: 'Bila perang s’lesai dan tugas t’lah usai,\nkita kan menghadap Bapa di sorga mulia.' },
-      ],
-    },
-  ];
-
-  extendedSamples.forEach((h) => map.set(h.id, h));
-  const merged = Array.from(map.values()).sort((a, b) => {
-    if (a.book !== b.book) return a.book.localeCompare(b.book);
-    return a.number - b.number;
+  existing.forEach((h) => {
+    if (!LEGACY_SAMPLE_IDS.has(h.id)) {
+      map.set(h.id, h);
+    }
   });
+  fullPack.forEach((h) => map.set(h.id, h));
 
+  const merged = sortHymns(Array.from(map.values()));
   await saveHymnsToDb(merged);
   return { count: merged.length };
 }

@@ -14,7 +14,6 @@ export type PageRoute =
   | 'statistik'
   | 'profil'
   | 'tentang'
-  | 'login'
   | 'dashboard';
 
 export type HymnBook = 'KJ' | 'PKJ' | 'NKB' | 'DSL' | 'NR';
@@ -122,6 +121,7 @@ export interface Hymn {
   id: string;
   book: HymnBook;
   number: number;
+  codeLabel?: string;
   title: string;
   keySignature?: string;
   verses: HymnVerse[];
@@ -131,10 +131,12 @@ export interface Hymn {
 export interface BibleVerse {
   verse: number;
   text: string;
+  title?: string;
 }
 
 export interface BibleChapter {
   chapter: number;
+  title?: string;
   verses: BibleVerse[];
 }
 
