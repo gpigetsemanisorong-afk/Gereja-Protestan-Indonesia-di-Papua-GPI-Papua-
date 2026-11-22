@@ -11,7 +11,7 @@ export default defineConfig(() => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['icon.svg', 'Logo_Gereja_Protestan_Indonesia_di_Papua.jpg', 'ayat_mingguan_pokok_anggur.jpg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'pwa-maskable-512x512.png'],
+        includeAssets: ['icon.svg', 'Logo_Gereja_Protestan_Indonesia_di_Papua.jpg', 'ayat_mingguan_pokok_anggur.jpg', 'og-ayat-mingguan.jpg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'pwa-maskable-512x512.png'],
         manifest: {
           id: '/',
           name: 'GPI Getsemani Sorong',

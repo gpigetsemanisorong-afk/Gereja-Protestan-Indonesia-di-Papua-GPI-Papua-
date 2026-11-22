@@ -54,12 +54,16 @@ export function buildBibleVerseSharePayload(
   imageUrl?: string
 ): SharePayload {
   const cleanText = verseText.replace(/^["“]|["”]$/g, '').trim();
-  const url = typeof window !== 'undefined' ? window.location.origin : '';
+  const origin =
+    typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null'
+      ? window.location.origin
+      : 'https://gereja-protestan-indonesia-di-papua.vercel.app';
+  const url = `${origin}/?ref=ayat-minggu-ini`;
   return {
     title: `${reference} — ${churchName}`,
-    text: `📖 ${reference} (Alkitab TB)\n"${cleanText}"\n\n— Portal ${churchName}`,
+    text: `📖 ${reference} (Alkitab TB)\n"${cleanText}"\n\n— Portal ${churchName}\n${url}`,
     url,
-    imageUrl,
+    imageUrl: imageUrl || '/og-ayat-mingguan.jpg',
     verseRef: reference,
     verseText: cleanText,
   };

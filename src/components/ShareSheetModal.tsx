@@ -145,7 +145,10 @@ export const ShareSheetModal: React.FC<ShareSheetModalProps> = ({
   if (!open || !payload) return null;
 
   const shareUrl = payload.url || (typeof window !== 'undefined' ? window.location.origin : '');
-  const fullShareText = shareUrl ? `${payload.text}\n\n${shareUrl}` : payload.text;
+  const fullShareText =
+    shareUrl && !payload.text.includes(shareUrl)
+      ? `${payload.text}\n\n${shareUrl}`
+      : payload.text;
 
   const waHref = `https://wa.me/?text=${encodeURIComponent(fullShareText)}`;
   const tgHref = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(
