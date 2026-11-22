@@ -16,7 +16,7 @@ export const PWAInstallButton: React.FC<{ compact?: boolean }> = ({ compact = fa
       <button
         type="button"
         onClick={install}
-        className="inline-flex min-h-[42px] items-center gap-2 rounded-full bg-amber-600 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-amber-700 whitespace-nowrap shrink-0 cursor-pointer"
+        className="inline-flex min-h-[40px] items-center gap-2 rounded-lg bg-amber-600 px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-amber-700 whitespace-nowrap shrink-0 cursor-pointer"
         title="Pasang aplikasi ke layar utama"
       >
         <Download className="h-4 w-4 shrink-0" />
@@ -31,24 +31,23 @@ export const PWAInstallButton: React.FC<{ compact?: boolean }> = ({ compact = fa
         <button
           type="button"
           onClick={() => setShowIOSGuide(true)}
-          className="inline-flex min-h-[42px] items-center gap-1.5 rounded-full bg-[#F4F6F9] px-4 py-2 text-xs font-semibold text-stone-700 transition-colors hover:bg-stone-200 dark:bg-[#1E232D] dark:text-stone-200 dark:hover:bg-stone-800 whitespace-nowrap shrink-0 cursor-pointer"
+          className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-xs font-medium text-stone-700 transition-colors hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200 dark:hover:bg-stone-700 whitespace-nowrap shrink-0 cursor-pointer"
         >
           <Smartphone className="h-4 w-4 shrink-0" />
           <span>Pasang di iOS</span>
         </button>
 
         {showIOSGuide && (
-          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 sm:items-center sm:p-4 backdrop-blur-sm">
-            <div className="animate-android-sheet w-full max-w-sm rounded-t-[28px] bg-white p-6 shadow-2xl dark:bg-[#161A22] sm:rounded-[28px]">
-              <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-stone-300 dark:bg-stone-700 sm:hidden" />
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-sm rounded-2xl border border-stone-200 bg-white p-6 shadow-xl dark:border-stone-800 dark:bg-stone-900">
               <div className="flex items-start justify-between gap-3">
-                <h3 className="text-lg font-bold text-stone-900 dark:text-stone-100">
+                <h3 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
                   Pasang di iPhone / iPad
                 </h3>
                 <button
                   type="button"
                   onClick={() => setShowIOSGuide(false)}
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F4F6F9] text-stone-500 hover:bg-stone-200 dark:bg-[#1E232D] dark:text-stone-300 cursor-pointer"
+                  className="rounded-lg p-1.5 text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800"
                   aria-label="Tutup panduan"
                 >
                   <X className="h-4 w-4" />
@@ -62,7 +61,7 @@ export const PWAInstallButton: React.FC<{ compact?: boolean }> = ({ compact = fa
               <button
                 type="button"
                 onClick={() => setShowIOSGuide(false)}
-                className="mt-5 w-full rounded-full bg-[#7F1D1D] py-3 text-sm font-semibold text-white hover:bg-[#68151B] cursor-pointer"
+                className="mt-5 w-full rounded-xl bg-[#7F1D1D] py-2.5 text-sm font-semibold text-white hover:bg-[#68151B]"
               >
                 Mengerti
               </button>
@@ -84,10 +83,10 @@ export const OfflineIndicator: React.FC = () => {
   return (
     <div
       role="status"
-      className="fixed bottom-20 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full bg-stone-900 px-4 py-2.5 text-xs font-medium text-white shadow-lg dark:bg-amber-500 dark:text-stone-950 md:bottom-5 md:left-6 md:translate-x-0"
+      className="fixed bottom-20 left-4 z-50 flex items-center gap-2 rounded-xl bg-amber-600 px-3.5 py-2 text-xs font-medium text-white shadow-lg lg:bottom-5"
     >
       <WifiOff className="h-4 w-4 shrink-0" />
-      <span className="whitespace-nowrap">Mode Offline · Data tersimpan</span>
+      <span>Mode Offline — Menampilkan data tersimpan</span>
     </div>
   );
 };

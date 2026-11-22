@@ -14,7 +14,8 @@ export type PageRoute =
   | 'statistik'
   | 'profil'
   | 'tentang'
-  | 'dashboard';
+  | 'dashboard'
+  | 'login';
 
 export type HymnBook = 'KJ' | 'PKJ' | 'NKB' | 'DSL' | 'NR';
 
