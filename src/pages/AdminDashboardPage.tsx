@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { usePortal } from '../context/PortalContext';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import galleryIbadahImg from '../assets/images/gallery_ibadah_minggu_1794648269888.jpg';
 import { useBibleDatabase } from '../hooks/useBibleDatabase';
 import { usePrayerBox } from '../hooks/usePrayerBox';
 import { PRAYER_CATEGORIES, PRAYER_STATUSES } from '../services/prayerBoxService';
@@ -203,9 +204,7 @@ export const AdminDashboardPage: React.FC = () => {
   const [galTitle, setGalTitle] = useState('');
   const [galCaption, setGalCaption] = useState('');
   const [galDate, setGalDate] = useState('November 2026');
-  const [galImageUrl, setGalImageUrl] = useState(
-    '/src/assets/images/gallery_ibadah_minggu_1794648269888.jpg'
-  );
+  const [galImageUrl, setGalImageUrl] = useState<string>(galleryIbadahImg);
 
   // Keuangan Form State (Super User)
   const [finDate, setFinDate] = useState('2026-11-15');

@@ -16,6 +16,7 @@ import { usePortal } from '../context/PortalContext';
 import { PageRoute } from '../types/church';
 import { ShareSheetModal } from '../components/ShareSheetModal';
 import { KalenderKegiatanWidget } from '../components/KalenderKegiatanWidget';
+import heroSanctuaryImg from '../assets/images/hero_getsemani_sanctuary_1794648269013.jpg';
 import {
   buildBibleVerseSharePayload,
   SharePayload,
@@ -116,7 +117,7 @@ export const BerandaPage: React.FC = () => {
           <section className="relative overflow-hidden rounded-[28px] bg-[#5C1215] text-white shadow-sm">
             {!heroImgError ? (
               <img
-                src="/src/assets/images/hero_getsemani_sanctuary_1794648269013.jpg"
+                src={heroSanctuaryImg}
                 alt="Ruang Ibadah GPI Getsemani Sorong"
                 referrerPolicy="no-referrer"
                 onError={() => setHeroImgError(true)}

@@ -1,5 +1,8 @@
 import { PortalDataState } from '../types/church';
 import { INITIAL_UNSUR_LITURGIES } from './unsurLiturgiesData';
+import heroSanctuaryImg from '../assets/images/hero_getsemani_sanctuary_1794648269013.jpg';
+import galleryIbadahImg from '../assets/images/gallery_ibadah_minggu_1794648269888.jpg';
+import galleryPelayananImg from '../assets/images/gallery_pelayanan_umat_1794648269776.jpg';
 
 export const INITIAL_PORTAL_DATA: PortalDataState = {
   profile: {
@@ -600,21 +603,21 @@ export const INITIAL_PORTAL_DATA: PortalDataState = {
       title: 'Gedung Ibadah GPI Getsemani Sorong',
       caption: 'Suasana pagi di ruang ibadah utama Jemaat Getsemani, Malanu - Sorong.',
       date: 'November 2026',
-      imageUrl: '/src/assets/images/hero_getsemani_sanctuary_1794648269013.jpg',
+      imageUrl: heroSanctuaryImg,
     },
     {
       id: 'gal-2',
       title: 'Kebaktian Minggu Jemaat',
       caption: 'Jemaat bersatu hati menaikkan pujian bersama dalam Ibadah Minggu pagi.',
       date: 'November 2026',
-      imageUrl: '/src/assets/images/gallery_ibadah_minggu_1794648269888.jpg',
+      imageUrl: galleryIbadahImg,
     },
     {
       id: 'gal-3',
       title: 'Persekutuan Sektor & Penelaahan Alkitab',
       caption: 'Kebersamaan warga jemaat dan majelis dalam ibadah keluarga di wilayah Malanu.',
       date: 'Oktober 2026',
-      imageUrl: '/src/assets/images/gallery_pelayanan_umat_1794648269776.jpg',
+      imageUrl: galleryPelayananImg,
     },
   ],
   statistics: [
