@@ -3,6 +3,8 @@ import { INITIAL_UNSUR_LITURGIES } from './unsurLiturgiesData';
 import heroSanctuaryImg from '../assets/images/hero_getsemani_sanctuary_1794648269013.jpg';
 import galleryIbadahImg from '../assets/images/gallery_ibadah_minggu_1794648269888.jpg';
 import galleryPelayananImg from '../assets/images/gallery_pelayanan_umat_1794648269776.jpg';
+import officialGpiLogo from '../assets/images/Logo_Gereja_Protestan_Indonesia_di_Papua.jpg';
+import weeklyVerseBgImg from '../assets/images/ayat_mingguan_pokok_anggur_1795368059629.jpg';
 
 export const INITIAL_PORTAL_DATA: PortalDataState = {
   profile: {
@@ -38,10 +40,11 @@ export const INITIAL_PORTAL_DATA: PortalDataState = {
       },
     ],
     logoDriveFolderId: '1p0BMcr5r-4NZFh7Uht2DwJRBMu6Kkeul',
-    logoUrl: '/icon.svg',
+    logoUrl: officialGpiLogo,
     weeklyVerse: {
       ref: 'Yohanes 15:5',
       text: '"Akulah pokok anggur dan kamulah ranting-rantingnya. Barangsiapa tinggal di dalam Aku dan Aku di dalam dia, ia berbuah banyak, sebab di luar Aku kamu tidak dapat berbuat apa-apa."',
+      imageUrl: weeklyVerseBgImg,
     },
     ministryTheme: 'Bertumbuh Bersama Kristus, Berbuah bagi Sesama di Tanah Papua',
   },

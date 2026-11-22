@@ -113,6 +113,17 @@ function loadStoredData(): PortalDataState {
       profile: {
         ...INITIAL_PORTAL_DATA.profile,
         ...(parsed.profile || {}),
+        logoUrl:
+          !parsed.profile?.logoUrl || parsed.profile?.logoUrl === '/icon.svg'
+            ? INITIAL_PORTAL_DATA.profile.logoUrl
+            : parsed.profile.logoUrl,
+        weeklyVerse: {
+          ...INITIAL_PORTAL_DATA.profile.weeklyVerse,
+          ...(parsed.profile?.weeklyVerse || {}),
+          imageUrl:
+            parsed.profile?.weeklyVerse?.imageUrl ||
+            INITIAL_PORTAL_DATA.profile.weeklyVerse.imageUrl,
+        },
       },
       syncConfig: {
         ...INITIAL_PORTAL_DATA.syncConfig,

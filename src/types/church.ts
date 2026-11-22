@@ -201,6 +201,7 @@ export interface ChurchProfile {
   weeklyVerse: {
     ref: string;
     text: string;
+    imageUrl?: string;
   };
   ministryTheme: string;
 }

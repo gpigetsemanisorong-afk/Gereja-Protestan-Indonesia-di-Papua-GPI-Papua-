@@ -4,6 +4,9 @@ export interface SharePayload {
   title: string;
   text: string;
   url?: string;
+  imageUrl?: string;
+  verseRef?: string;
+  verseText?: string;
 }
 
 export type WebShareOutcome =
@@ -47,7 +50,8 @@ export async function triggerWebShare(payload: SharePayload): Promise<WebShareOu
 export function buildBibleVerseSharePayload(
   reference: string,
   verseText: string,
-  churchName: string
+  churchName: string,
+  imageUrl?: string
 ): SharePayload {
   const cleanText = verseText.replace(/^["“]|["”]$/g, '').trim();
   const url = typeof window !== 'undefined' ? window.location.origin : '';
@@ -55,6 +59,9 @@ export function buildBibleVerseSharePayload(
     title: `${reference} — ${churchName}`,
     text: `📖 ${reference} (Alkitab TB)\n"${cleanText}"\n\n— Portal ${churchName}`,
     url,
+    imageUrl,
+    verseRef: reference,
+    verseText: cleanText,
   };
 }
 
