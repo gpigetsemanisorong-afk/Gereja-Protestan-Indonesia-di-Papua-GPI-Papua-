@@ -131,7 +131,6 @@ export const KotakDoaLayananPage: React.FC<{ initialTab?: KotakDoaLayananTab }> 
       return;
     }
 
-    // Lapor Sakit or Baptis/Sidi/Nikah
     if (!requesterName.trim()) {
       setErrorMsg('Mohon tuliskan nama lengkap pemohon.');
       return;
@@ -237,7 +236,6 @@ export const KotakDoaLayananPage: React.FC<{ initialTab?: KotakDoaLayananTab }> 
         </p>
       </div>
 
-      {/* Category Switcher */}
       <div className="grid grid-cols-1 gap-1.5 rounded-2xl bg-white p-1.5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22] sm:grid-cols-3 sm:rounded-full">
         {TAB_ITEMS.map((tab) => {
           const isSelected = activeTab === tab.id;
@@ -259,7 +257,6 @@ export const KotakDoaLayananPage: React.FC<{ initialTab?: KotakDoaLayananTab }> 
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.35fr_0.95fr] lg:items-start">
-        {/* Main Unified Form */}
         <form
           onSubmit={handleSubmit}
           className="space-y-4 rounded-[24px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22] sm:p-7"
@@ -487,7 +484,6 @@ export const KotakDoaLayananPage: React.FC<{ initialTab?: KotakDoaLayananTab }> 
           )}
         </form>
 
-        {/* Sidebar: Firman Penguat & Riwayat Pengirim */}
         <aside className="space-y-5">
           <div className="rounded-[24px] bg-amber-50/90 p-5 dark:bg-amber-950/20 sm:p-6">
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-400">
