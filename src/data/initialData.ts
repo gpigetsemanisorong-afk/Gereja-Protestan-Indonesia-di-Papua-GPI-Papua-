@@ -607,6 +607,7 @@ export const INITIAL_PORTAL_DATA: PortalDataState = {
       caption: 'Suasana pagi di ruang ibadah utama Jemaat Getsemani, Malanu - Sorong.',
       date: 'November 2026',
       imageUrl: heroSanctuaryImg,
+      category: 'Pembangunan & Lainnya',
     },
     {
       id: 'gal-2',
@@ -614,6 +615,7 @@ export const INITIAL_PORTAL_DATA: PortalDataState = {
       caption: 'Jemaat bersatu hati menaikkan pujian bersama dalam Ibadah Minggu pagi.',
       date: 'November 2026',
       imageUrl: galleryIbadahImg,
+      category: 'Ibadah Minggu',
     },
     {
       id: 'gal-3',
@@ -621,6 +623,23 @@ export const INITIAL_PORTAL_DATA: PortalDataState = {
       caption: 'Kebersamaan warga jemaat dan majelis dalam ibadah keluarga di wilayah Malanu.',
       date: 'Oktober 2026',
       imageUrl: galleryPelayananImg,
+      category: 'Persekutuan & Sektor',
+    },
+    {
+      id: 'gal-4',
+      title: 'Ibadah Pelayanan Anak & Remaja (PAR)',
+      caption: 'Pembinaan iman anak-anak sekolah minggu dan remaja GPI Getsemani Sorong.',
+      date: 'November 2026',
+      imageUrl: weeklyVerseBgImg,
+      category: 'PAR & Pemuda',
+    },
+    {
+      id: 'gal-5',
+      title: 'Aksi Diakonia Kasih Jemaat',
+      caption: 'Penyerahan bantuan kasih dan kunjungan diakonia kepada warga jemaat yang membutuhkan.',
+      date: 'Oktober 2026',
+      imageUrl: galleryPelayananImg,
+      category: 'Diakonia & Sosial',
     },
   ],
   statistics: [

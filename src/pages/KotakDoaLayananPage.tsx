@@ -1,11 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   CalendarDays,
+  Camera,
   CheckCircle2,
   Clock,
   FileText,
   Heart,
   HeartHandshake,
+  Image as ImageIcon,
   Lock,
   MapPin,
   MessageCircle,
@@ -15,13 +17,15 @@ import {
   Sparkles,
   User,
   Users,
+  X,
+  ZoomIn,
 } from 'lucide-react';
 import { usePortal } from '../context/PortalContext';
 import { usePrayerBox } from '../hooks/usePrayerBox';
 import { PRAYER_CATEGORIES } from '../services/prayerBoxService';
-import { PrayerCategory } from '../types/church';
+import { PrayerCategory, GalleryItem } from '../types/church';
 
-export type KotakDoaLayananTab = 'Kotak Doa' | 'Lapor Sakit' | 'Baptis/Sidi/Nikah' | 'Kunjungan Pastoral';
+export type KotakDoaLayananTab = 'Kotak Doa' | 'Lapor Sakit' | 'Baptis/Sidi/Nikah' | 'Kunjungan Pastoral' | 'Galeri Kegiatan';
 
 const UNITS = [
   'Unit Rehoboth (Filadelfia)',
@@ -31,11 +35,14 @@ const UNITS = [
   'Simpatisan / Tamu',
 ];
 
+const GALLERY_CATEGORIES = ['Semua', 'Ibadah Minggu', 'Persekutuan & Sektor', 'PAR & Pemuda', 'Diakonia & Sosial', 'Pembangunan & Lainnya'];
+
 const TAB_ITEMS: { id: KotakDoaLayananTab; label: string }[] = [
   { id: 'Kotak Doa', label: 'Kotak Doa' },
   { id: 'Lapor Sakit', label: 'Lapor Sakit' },
   { id: 'Baptis/Sidi/Nikah', label: 'Baptis / Sidi / Nikah' },
   { id: 'Kunjungan Pastoral', label: 'Kunjungan Pastoral' },
+  { id: 'Galeri Kegiatan', label: 'Galeri Kegiatan' },
 ];
 
 export const KotakDoaLayananPage: React.FC<{ initialTab?: KotakDoaLayananTab }> = ({
@@ -71,6 +78,52 @@ export const KotakDoaLayananPage: React.FC<{ initialTab?: KotakDoaLayananTab }> 
   const [visMajelis, setVisMajelis] = useState('Pdt. Yosua Waromi, S.Th.');
   const [visPrayerNeed, setVisPrayerNeed] = useState('');
   const [visSuccessMsg, setVisSuccessMsg] = useState<string | null>(null);
+
+  // Gallery state
+  const { currentUserRole } = usePortal();
+  const [galleryFilter, setGalleryFilter] = useState<string>('Semua');
+  const [selectedGalleryItem, setSelectedGalleryItem] = useState<GalleryItem | null>(null);
+  const [isAddGalleryModalOpen, setIsAddGalleryModalOpen] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+  const [newCaption, setNewCaption] = useState('');
+  const [newCategory, setNewCategory] = useState<'Ibadah Minggu' | 'Persekutuan & Sektor' | 'PAR & Pemuda' | 'Diakonia & Sosial' | 'Pembangunan & Lainnya'>('Ibadah Minggu');
+  const [newImageUrl, setNewImageUrl] = useState('');
+
+  const filteredGallery = useMemo(() => {
+    const list = data.gallery || [];
+    if (galleryFilter === 'Semua') return list;
+    return list.filter((item) => (item.category || 'Pembangunan & Lainnya') === galleryFilter);
+  }, [data.gallery, galleryFilter]);
+
+  const handleAddGalleryItem = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTitle.trim() || !newCaption.trim()) return;
+
+    const newItem: GalleryItem = {
+      id: `gal-${Date.now()}`,
+      title: newTitle.trim(),
+      caption: newCaption.trim(),
+      date: new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }),
+      imageUrl: newImageUrl.trim() || data.profile.logoUrl || 'https://images.unsplash.com/photo-1544427920-c49ccfb85579?auto=format&fit=crop&w=1200&q=80',
+      category: newCategory,
+    };
+
+    updateData((prev) => ({
+      ...prev,
+      gallery: [newItem, ...prev.gallery],
+    }));
+
+    logActivity({
+      category: 'Galeri',
+      action: 'Tambah Foto Galeri Kegiatan',
+      detail: `Foto "${newItem.title}" ditambahkan ke galeri jemaat.`,
+    });
+
+    setNewTitle('');
+    setNewCaption('');
+    setNewImageUrl('');
+    setIsAddGalleryModalOpen(false);
+  };
 
   useEffect(() => {
     setActiveTab(initialTab);
@@ -312,7 +365,257 @@ export const KotakDoaLayananPage: React.FC<{ initialTab?: KotakDoaLayananTab }> 
         })}
       </div>
 
-      {activeTab === 'Kunjungan Pastoral' ? (
+      {activeTab === 'Galeri Kegiatan' ? (
+        <div className="space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-4 rounded-[24px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22] sm:p-7">
+            <div>
+              <h2 className="flex items-center gap-2 text-xl font-bold text-stone-900 dark:text-stone-100 sm:text-2xl">
+                <Camera className="h-6 w-6 text-[#7F1D1D] dark:text-amber-400" />
+                <span>Galeri &amp; Dokumentasi Kegiatan Jemaat</span>
+              </h2>
+              <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
+                Dokumentasi foto kegiatan ibadah, persekutuan sektor, PAR, pemuda, diakonia, dan acara kebersamaan Jemaat GPI Getsemani Sorong.
+              </p>
+            </div>
+
+            {currentUserRole !== 'jemaat' && (
+              <button
+                type="button"
+                onClick={() => setIsAddGalleryModalOpen(true)}
+                className="inline-flex min-h-[42px] items-center gap-2 rounded-full bg-[#7F1D1D] px-5 py-2 text-xs font-bold text-white hover:bg-[#68151B] cursor-pointer shadow-sm"
+              >
+                <PlusCircle className="h-4 w-4" />
+                <span>+ Tambah Dokumentasi Foto</span>
+              </button>
+            )}
+          </div>
+
+          {/* Category Filters */}
+          <div className="flex flex-wrap items-center gap-2">
+            {GALLERY_CATEGORIES.map((cat) => {
+              const active = galleryFilter === cat;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setGalleryFilter(cat)}
+                  className={`min-h-[38px] rounded-full px-4 text-xs font-semibold transition-colors cursor-pointer ${
+                    active
+                      ? 'bg-[#7F1D1D] text-white dark:bg-amber-400 dark:text-stone-950'
+                      : 'bg-white text-stone-700 hover:bg-stone-100 dark:bg-[#161A22] dark:text-stone-300 dark:hover:bg-stone-800'
+                  }`}
+                >
+                  {cat}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Gallery Grid */}
+          {filteredGallery.length === 0 ? (
+            <div className="rounded-[24px] bg-white p-12 text-center text-sm text-stone-500 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22] dark:text-stone-400">
+              Belum ada foto dalam kategori galeri ini.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {filteredGallery.map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => setSelectedGalleryItem(item)}
+                  className="group relative overflow-hidden rounded-[24px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-all hover:-translate-y-1 hover:shadow-xl dark:bg-[#161A22] cursor-pointer flex flex-col"
+                >
+                  <div className="relative aspect-[16/10] w-full overflow-hidden bg-stone-100 dark:bg-stone-800">
+                    <img
+                      src={item.imageUrl}
+                      alt={item.title}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-stone-950/70 via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
+                    {item.category && (
+                      <span className="absolute top-3 left-3 rounded-full bg-black/60 backdrop-blur-md px-3 py-1 text-[11px] font-bold text-white">
+                        {item.category}
+                      </span>
+                    )}
+                    <span className="absolute bottom-3 right-3 inline-flex items-center gap-1 rounded-full bg-white/90 backdrop-blur-md px-2.5 py-1 text-[10px] font-semibold text-stone-900 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                      <ZoomIn className="h-3 w-3" />
+                      <span>Perbesar</span>
+                    </span>
+                  </div>
+
+                  <div className="flex flex-1 flex-col justify-between p-5">
+                    <div>
+                      <p className="text-[11px] font-semibold text-[#7F1D1D] dark:text-amber-400">
+                        {item.date}
+                      </p>
+                      <h3 className="mt-1 text-base font-bold text-stone-900 dark:text-stone-100 group-hover:text-[#7F1D1D] dark:group-hover:text-amber-400 transition-colors">
+                        {item.title}
+                      </h3>
+                      <p className="mt-1.5 text-xs line-clamp-2 text-stone-600 dark:text-stone-300 leading-relaxed">
+                        {item.caption}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Lightbox Modal */}
+          {selectedGalleryItem && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
+              <div className="relative max-h-[90vh] max-w-4xl w-full overflow-hidden rounded-[28px] bg-white shadow-2xl dark:bg-[#161A22] flex flex-col">
+                <div className="flex items-center justify-between border-b border-stone-100 px-6 py-4 dark:border-stone-800">
+                  <div>
+                    <span className="text-xs font-bold text-[#7F1D1D] dark:text-amber-400">
+                      {selectedGalleryItem.category || 'Galeri Kegiatan'} · {selectedGalleryItem.date}
+                    </span>
+                    <h3 className="text-base font-bold text-stone-900 dark:text-stone-100">
+                      {selectedGalleryItem.title}
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedGalleryItem(null)}
+                    className="rounded-full bg-stone-100 p-2 text-stone-600 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300 cursor-pointer"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <div className="max-h-[60vh] overflow-hidden bg-stone-950 flex items-center justify-center">
+                  <img
+                    src={selectedGalleryItem.imageUrl}
+                    alt={selectedGalleryItem.title}
+                    className="max-h-[60vh] w-auto object-contain"
+                  />
+                </div>
+
+                <div className="p-6 bg-white dark:bg-[#161A22] space-y-3">
+                  <p className="text-sm text-stone-700 dark:text-stone-300 leading-relaxed">
+                    {selectedGalleryItem.caption}
+                  </p>
+                  <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-stone-100 dark:border-stone-800">
+                    <span className="text-xs text-stone-500 dark:text-stone-400">
+                      GPI Getsemani Sorong — Dokumentasi Jemaat
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const waShare = `https://wa.me/?text=${encodeURIComponent(
+                          `Dokumentasi ${selectedGalleryItem.title} - ${selectedGalleryItem.caption} (${selectedGalleryItem.date})`
+                        )}`;
+                        window.open(waShare, '_blank');
+                      }}
+                      className="inline-flex min-h-[38px] items-center gap-1.5 rounded-full bg-emerald-700 px-4 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800 cursor-pointer"
+                    >
+                      <span>Bagikan ke WhatsApp</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Add Gallery Modal */}
+          {isAddGalleryModalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+              <div className="max-w-lg w-full rounded-[28px] bg-white p-6 shadow-2xl dark:bg-[#161A22] sm:p-7 space-y-5">
+                <div className="flex items-center justify-between border-b border-stone-100 pb-3 dark:border-stone-800">
+                  <h3 className="text-base font-bold text-stone-900 dark:text-stone-100">
+                    Tambah Foto Dokumentasi Galeri
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setIsAddGalleryModalOpen(false)}
+                    className="rounded-full bg-stone-100 p-2 text-stone-600 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-300 cursor-pointer"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <form onSubmit={handleAddGalleryItem} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300">
+                      Judul Kegiatan / Foto *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newTitle}
+                      onChange={(e) => setNewTitle(e.target.value)}
+                      placeholder="Contoh: Perayaan HUT Pelayanan Anak & Remaja (PAR)"
+                      className="mt-1.5 w-full rounded-2xl bg-[#F4F6F9] px-3.5 py-3 text-sm text-stone-900 focus:ring-2 focus:ring-[#7F1D1D]/25 focus:outline-none dark:bg-[#1E232D] dark:text-stone-100"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300">
+                      Kategori Galeri
+                    </label>
+                    <select
+                      value={newCategory}
+                      onChange={(e) => setNewCategory(e.target.value as any)}
+                      className="mt-1.5 w-full rounded-2xl bg-[#F4F6F9] px-3.5 py-3 text-sm text-stone-900 focus:ring-2 focus:ring-[#7F1D1D]/25 focus:outline-none dark:bg-[#1E232D] dark:text-stone-100"
+                    >
+                      <option value="Ibadah Minggu">Ibadah Minggu</option>
+                      <option value="Persekutuan & Sektor">Persekutuan &amp; Sektor</option>
+                      <option value="PAR & Pemuda">PAR &amp; Pemuda</option>
+                      <option value="Diakonia & Sosial">Diakonia &amp; Sosial</option>
+                      <option value="Pembangunan & Lainnya">Pembangunan &amp; Lainnya</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300">
+                      URL Gambar Foto (Opsional / Unsplash) *
+                    </label>
+                    <input
+                      type="url"
+                      value={newImageUrl}
+                      onChange={(e) => setNewImageUrl(e.target.value)}
+                      placeholder="https://images.unsplash.com/photo-..."
+                      className="mt-1.5 w-full rounded-2xl bg-[#F4F6F9] px-3.5 py-3 text-sm text-stone-900 focus:ring-2 focus:ring-[#7F1D1D]/25 focus:outline-none dark:bg-[#1E232D] dark:text-stone-100"
+                    />
+                    <p className="mt-1 text-[11px] text-stone-500 dark:text-stone-400">
+                      Jika dikosongkan, akan otomatis menggunakan foto default gereja.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300">
+                      Keterangan / Caption Singkat *
+                    </label>
+                    <textarea
+                      rows={3}
+                      required
+                      value={newCaption}
+                      onChange={(e) => setNewCaption(e.target.value)}
+                      placeholder="Tuliskan cerita singkat atau suasana kegiatan..."
+                      className="mt-1.5 w-full rounded-2xl bg-[#F4F6F9] p-3.5 text-sm text-stone-900 focus:ring-2 focus:ring-[#7F1D1D]/25 focus:outline-none dark:bg-[#1E232D] dark:text-stone-100"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-end gap-3 pt-2 border-t border-stone-100 dark:border-stone-800">
+                    <button
+                      type="button"
+                      onClick={() => setIsAddGalleryModalOpen(false)}
+                      className="rounded-full px-4 py-2 text-xs font-semibold text-stone-600 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-800 cursor-pointer"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      type="submit"
+                      className="rounded-full bg-[#7F1D1D] px-5 py-2.5 text-xs font-bold text-white hover:bg-[#68151B] cursor-pointer"
+                    >
+                      Simpan &amp; Terbitkan Foto
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+        </div>
+      ) : activeTab === 'Kunjungan Pastoral' ? (
         <div className="space-y-6">
           {/* Section 1: Rencana Kerja Majelis */}
           <div className="rounded-[24px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22] sm:p-7">

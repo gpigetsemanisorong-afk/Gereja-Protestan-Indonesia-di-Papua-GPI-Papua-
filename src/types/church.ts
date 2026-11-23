@@ -162,6 +162,7 @@ export interface GalleryItem {
   caption: string;
   date: string;
   imageUrl: string;
+  category?: 'Ibadah Minggu' | 'Persekutuan & Sektor' | 'PAR & Pemuda' | 'Diakonia & Sosial' | 'Pembangunan & Lainnya';
 }
 
 export interface CongregationStatRow {
@@ -221,7 +222,7 @@ export interface WorkspaceSyncConfig {
 
 export interface ServiceRequestLog {
   id: string;
-  type: 'Pokok Doa' | 'Lapor Sakit' | 'Baptis/Sidi/Nikah' | 'Kunjungan Pastoral';
+  type: 'Pokok Doa' | 'Lapor Sakit' | 'Baptis/Sidi/Nikah' | 'Kunjungan Pastoral' | 'Galeri Kegiatan';
   requesterName: string;
   phone: string;
   unit: string;
