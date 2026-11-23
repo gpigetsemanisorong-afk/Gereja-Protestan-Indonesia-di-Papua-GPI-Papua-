@@ -48,8 +48,13 @@ const TAB_ITEMS: { id: KotakDoaLayananTab; label: string }[] = [
 export const KotakDoaLayananPage: React.FC<{ initialTab?: KotakDoaLayananTab }> = ({
   initialTab = 'Kotak Doa',
 }) => {
-  const { data, updateData, logActivity } = usePortal();
+  const { data, updateData, logActivity, currentUserRole, openMenuSheet } = usePortal();
   const { mySentPrayers, submitPrayer } = usePrayerBox(false);
+
+  const canManagePastoral =
+    currentUserRole === 'superuser' ||
+    currentUserRole === 'admin1' ||
+    currentUserRole === 'admin2';
 
   const [activeTab, setActiveTab] = useState<KotakDoaLayananTab>(initialTab);
   const [isAnonymous, setIsAnonymous] = useState(false);
@@ -80,7 +85,6 @@ export const KotakDoaLayananPage: React.FC<{ initialTab?: KotakDoaLayananTab }> 
   const [visSuccessMsg, setVisSuccessMsg] = useState<string | null>(null);
 
   // Gallery state
-  const { currentUserRole } = usePortal();
   const [galleryFilter, setGalleryFilter] = useState<string>('Semua');
   const [selectedGalleryItem, setSelectedGalleryItem] = useState<GalleryItem | null>(null);
   const [isAddGalleryModalOpen, setIsAddGalleryModalOpen] = useState(false);
@@ -267,6 +271,10 @@ export const KotakDoaLayananPage: React.FC<{ initialTab?: KotakDoaLayananTab }> 
 
   const handleAddVisitation = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canManagePastoral) {
+      setErrorMsg('Hanya akun Admin dan Super Admin yang dapat menambahkan atau menjadwalkan kunjungan pastoral.');
+      return;
+    }
     if (!visFamilyName.trim() || !visAddress.trim() || !visDate) {
       setErrorMsg('Mohon lengkapi Nama Keluarga, Alamat, dan Tanggal Kunjungan.');
       return;
@@ -294,8 +302,8 @@ export const KotakDoaLayananPage: React.FC<{ initialTab?: KotakDoaLayananTab }> 
       category: 'Kunjungan Pastoral',
       action: 'Jadwalkan Kunjungan Pastoral',
       detail: `Kunjungan ke ${visFamilyName.trim()} (${visSectorUnit}) pada ${visDate}`,
-      actorOverride: 'Majelis Jemaat',
-      roleOverride: 'admin1',
+      actorOverride: currentUserRole === 'superuser' ? 'Super Admin' : 'Admin Majelis',
+      roleOverride: currentUserRole || 'admin1',
     });
 
     setVisFamilyName('');
@@ -735,134 +743,174 @@ export const KotakDoaLayananPage: React.FC<{ initialTab?: KotakDoaLayananTab }> 
 
           {/* Section 3: Form Jadwal Kunjungan Baru */}
           <div className="rounded-[24px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22] sm:p-7">
-            <div className="flex items-center gap-2.5 border-b border-stone-100 pb-4 dark:border-stone-800/80">
-              <PlusCircle className="h-5 w-5 text-[#7F1D1D] dark:text-amber-400" />
-              <div>
-                <h2 className="text-base font-bold text-stone-900 dark:text-stone-100 sm:text-lg">
-                  03. Tambah / Jadwalkan Kunjungan Pastoral Baru
-                </h2>
-                <p className="text-xs text-stone-500 dark:text-stone-400">
-                  Majelis Jemaat dapat menjadwalkan kunjungan baru yang otomatis tersinkron ke Kotak Doa dan Kalender.
-                </p>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stone-100 pb-4 dark:border-stone-800/80">
+              <div className="flex items-center gap-2.5">
+                <PlusCircle className="h-5 w-5 text-[#7F1D1D] dark:text-amber-400" />
+                <div>
+                  <h2 className="text-base font-bold text-stone-900 dark:text-stone-100 sm:text-lg">
+                    03. Tambah / Jadwalkan Kunjungan Pastoral Baru
+                  </h2>
+                  <p className="text-xs text-stone-500 dark:text-stone-400">
+                    Majelis Jemaat dapat menjadwalkan kunjungan baru yang otomatis tersinkron ke Kotak Doa dan Kalender.
+                  </p>
+                </div>
               </div>
+
+              {canManagePastoral ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  <span>
+                    Masuk sebagai {currentUserRole === 'superuser' ? 'Super Admin' : 'Admin'}
+                  </span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+                  <Lock className="h-3.5 w-3.5" />
+                  <span>Khusus Akun Admin &amp; Super Admin</span>
+                </span>
+              )}
             </div>
 
-            <form onSubmit={handleAddVisitation} className="mt-5 space-y-4">
-              {visSuccessMsg && (
-                <div className="rounded-2xl bg-emerald-50 p-4 text-xs font-semibold text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200">
-                  {visSuccessMsg}
-                </div>
-              )}
+            {canManagePastoral ? (
+              <form onSubmit={handleAddVisitation} className="mt-5 space-y-4">
+                {visSuccessMsg && (
+                  <div className="rounded-2xl bg-emerald-50 p-4 text-xs font-semibold text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200">
+                    {visSuccessMsg}
+                  </div>
+                )}
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300">
-                    Nama Keluarga / Warga Jemaat *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={visFamilyName}
-                    onChange={(e) => setVisFamilyName(e.target.value)}
-                    placeholder="Contoh: Kel. Bpk. Markus Rumere"
-                    className="mt-1.5 w-full rounded-2xl bg-[#F4F6F9] px-3.5 py-3 text-sm text-stone-900 focus:ring-2 focus:ring-[#7F1D1D]/25 focus:outline-none dark:bg-[#1E232D] dark:text-stone-100"
-                  />
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300">
+                      Nama Keluarga / Warga Jemaat *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={visFamilyName}
+                      onChange={(e) => setVisFamilyName(e.target.value)}
+                      placeholder="Contoh: Kel. Bpk. Markus Rumere"
+                      className="mt-1.5 w-full rounded-2xl bg-[#F4F6F9] px-3.5 py-3 text-sm text-stone-900 focus:ring-2 focus:ring-[#7F1D1D]/25 focus:outline-none dark:bg-[#1E232D] dark:text-stone-100"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300">
+                      Sektor &amp; Unit Pelayanan
+                    </label>
+                    <select
+                      value={visSectorUnit}
+                      onChange={(e) => setVisSectorUnit(e.target.value)}
+                      className="mt-1.5 w-full rounded-2xl bg-[#F4F6F9] px-3.5 py-3 text-sm text-stone-900 focus:ring-2 focus:ring-[#7F1D1D]/25 focus:outline-none dark:bg-[#1E232D] dark:text-stone-100"
+                    >
+                      {UNITS.map((u) => (
+                        <option key={u} value={u}>{u}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300">
-                    Sektor &amp; Unit Pelayanan
-                  </label>
-                  <select
-                    value={visSectorUnit}
-                    onChange={(e) => setVisSectorUnit(e.target.value)}
-                    className="mt-1.5 w-full rounded-2xl bg-[#F4F6F9] px-3.5 py-3 text-sm text-stone-900 focus:ring-2 focus:ring-[#7F1D1D]/25 focus:outline-none dark:bg-[#1E232D] dark:text-stone-100"
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300">
+                      Alamat Lengkap *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={visAddress}
+                      onChange={(e) => setVisAddress(e.target.value)}
+                      placeholder="Jl. Malanu / Perumahan..."
+                      className="mt-1.5 w-full rounded-2xl bg-[#F4F6F9] px-3.5 py-3 text-sm text-stone-900 focus:ring-2 focus:ring-[#7F1D1D]/25 focus:outline-none dark:bg-[#1E232D] dark:text-stone-100"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300">
+                      Tanggal Pelaksanaan *
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={visDate}
+                      onChange={(e) => setVisDate(e.target.value)}
+                      className="mt-1.5 w-full rounded-2xl bg-[#F4F6F9] px-3.5 py-3 text-sm text-stone-900 focus:ring-2 focus:ring-[#7F1D1D]/25 focus:outline-none dark:bg-[#1E232D] dark:text-stone-100"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300">
+                      Waktu / Jam
+                    </label>
+                    <input
+                      type="text"
+                      value={visTime}
+                      onChange={(e) => setVisTime(e.target.value)}
+                      placeholder="16.00 WIT"
+                      className="mt-1.5 w-full rounded-2xl bg-[#F4F6F9] px-3.5 py-3 text-sm text-stone-900 focus:ring-2 focus:ring-[#7F1D1D]/25 focus:outline-none dark:bg-[#1E232D] dark:text-stone-100"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300">
+                      Petugas Majelis / Pendeta Bertugas
+                    </label>
+                    <input
+                      type="text"
+                      value={visMajelis}
+                      onChange={(e) => setVisMajelis(e.target.value)}
+                      placeholder="Pdt. Yosua Waromi, S.Th. & Majelis Sektor"
+                      className="mt-1.5 w-full rounded-2xl bg-[#F4F6F9] px-3.5 py-3 text-sm text-stone-900 focus:ring-2 focus:ring-[#7F1D1D]/25 focus:outline-none dark:bg-[#1E232D] dark:text-stone-100"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300">
+                      Kebutuhan / Alasan Kunjungan Pastoral
+                    </label>
+                    <input
+                      type="text"
+                      value={visPrayerNeed}
+                      onChange={(e) => setVisPrayerNeed(e.target.value)}
+                      placeholder="Doa pemulihan sakit / perlawatan lansia..."
+                      className="mt-1.5 w-full rounded-2xl bg-[#F4F6F9] px-3.5 py-3 text-sm text-stone-900 focus:ring-2 focus:ring-[#7F1D1D]/25 focus:outline-none dark:bg-[#1E232D] dark:text-stone-100"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full bg-[#7F1D1D] text-xs font-bold text-white transition-all hover:bg-[#68151B] active:scale-[0.98] cursor-pointer sm:text-sm shadow-sm"
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  <span>Simpan &amp; Sinkronkan Jadwal Kunjungan Pastoral</span>
+                </button>
+              </form>
+            ) : (
+              <div className="mt-6 rounded-2xl border border-dashed border-stone-200 bg-[#F4F6F9]/80 p-6 text-center dark:border-stone-800 dark:bg-[#1E232D]/50 sm:p-8">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-300">
+                  <Lock className="h-6 w-6" />
+                </div>
+                <h3 className="mt-3.5 text-sm font-bold text-stone-900 dark:text-stone-100 sm:text-base">
+                  Akses Terbatas: Khusus Akun Admin &amp; Super Admin
+                </h3>
+                <p className="mx-auto mt-1.5 max-w-md text-xs leading-relaxed text-stone-600 dark:text-stone-400">
+                  Untuk menambahkan atau menjadwalkan Kunjungan Pastoral baru Majelis Jemaat, Anda harus masuk (login) terlebih dahulu menggunakan akun <strong>Super Admin</strong> atau <strong>Admin</strong>.
+                </p>
+                <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => openMenuSheet(true)}
+                    className="inline-flex min-h-[42px] items-center gap-2 rounded-full bg-[#7F1D1D] px-5 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-[#68151B] active:scale-[0.98] transition-all cursor-pointer"
                   >
-                    {UNITS.map((u) => (
-                      <option key={u} value={u}>{u}</option>
-                    ))}
-                  </select>
+                    <User className="h-4 w-4" />
+                    <span>Masuk sebagai Admin / Super Admin</span>
+                  </button>
                 </div>
               </div>
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <div>
-                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300">
-                    Alamat Lengkap *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={visAddress}
-                    onChange={(e) => setVisAddress(e.target.value)}
-                    placeholder="Jl. Malanu / Perumahan..."
-                    className="mt-1.5 w-full rounded-2xl bg-[#F4F6F9] px-3.5 py-3 text-sm text-stone-900 focus:ring-2 focus:ring-[#7F1D1D]/25 focus:outline-none dark:bg-[#1E232D] dark:text-stone-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300">
-                    Tanggal Pelaksanaan *
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={visDate}
-                    onChange={(e) => setVisDate(e.target.value)}
-                    className="mt-1.5 w-full rounded-2xl bg-[#F4F6F9] px-3.5 py-3 text-sm text-stone-900 focus:ring-2 focus:ring-[#7F1D1D]/25 focus:outline-none dark:bg-[#1E232D] dark:text-stone-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300">
-                    Waktu / Jam
-                  </label>
-                  <input
-                    type="text"
-                    value={visTime}
-                    onChange={(e) => setVisTime(e.target.value)}
-                    placeholder="16.00 WIT"
-                    className="mt-1.5 w-full rounded-2xl bg-[#F4F6F9] px-3.5 py-3 text-sm text-stone-900 focus:ring-2 focus:ring-[#7F1D1D]/25 focus:outline-none dark:bg-[#1E232D] dark:text-stone-100"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300">
-                    Petugas Majelis / Pendeta Bertugas
-                  </label>
-                  <input
-                    type="text"
-                    value={visMajelis}
-                    onChange={(e) => setVisMajelis(e.target.value)}
-                    placeholder="Pdt. Yosua Waromi, S.Th. & Majelis Sektor"
-                    className="mt-1.5 w-full rounded-2xl bg-[#F4F6F9] px-3.5 py-3 text-sm text-stone-900 focus:ring-2 focus:ring-[#7F1D1D]/25 focus:outline-none dark:bg-[#1E232D] dark:text-stone-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300">
-                    Kebutuhan / Alasan Kunjungan Pastoral
-                  </label>
-                  <input
-                    type="text"
-                    value={visPrayerNeed}
-                    onChange={(e) => setVisPrayerNeed(e.target.value)}
-                    placeholder="Doa pemulihan sakit / perlawatan lansia..."
-                    className="mt-1.5 w-full rounded-2xl bg-[#F4F6F9] px-3.5 py-3 text-sm text-stone-900 focus:ring-2 focus:ring-[#7F1D1D]/25 focus:outline-none dark:bg-[#1E232D] dark:text-stone-100"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-full bg-[#7F1D1D] text-xs font-bold text-white transition-all hover:bg-[#68151B] active:scale-[0.98] cursor-pointer sm:text-sm shadow-sm"
-              >
-                <PlusCircle className="h-4 w-4" />
-                <span>Simpan &amp; Sinkronkan Jadwal Kunjungan Pastoral</span>
-              </button>
-            </form>
+            )}
           </div>
         </div>
       ) : (
