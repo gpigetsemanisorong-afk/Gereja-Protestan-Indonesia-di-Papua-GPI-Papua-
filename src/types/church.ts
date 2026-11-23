@@ -222,12 +222,34 @@ export interface WorkspaceSyncConfig {
 
 export interface ServiceRequestLog {
   id: string;
-  type: 'Pokok Doa' | 'Lapor Sakit' | 'Baptis/Sidi/Nikah' | 'Kunjungan Pastoral' | 'Galeri Kegiatan';
+  type: 'Pokok Doa' | 'Lapor Sakit' | 'Baptis/Sidi/Nikah' | 'Kunjungan Pastoral' | 'Galeri Kegiatan' | 'Perangkat Pelayan';
   requesterName: string;
   phone: string;
   unit: string;
   detail: string;
   createdAt: string;
+}
+
+export type MinistryLeaderGroup =
+  | 'PHMJ'
+  | 'PAR'
+  | 'PP'
+  | 'PERWATA'
+  | 'PERPRI'
+  | 'LANSIA'
+  | 'Koordinator Sektor';
+
+export interface MinistryLeaderItem {
+  id: string;
+  group: MinistryLeaderGroup;
+  roleTitle: string; // e.g. 'Ketua PHMJ', 'Sekretaris', 'Bendahara'
+  name: string;
+  titleOrStatus?: string; // e.g. 'Pendeta Jemaat', 'Penatua', 'Diaken'
+  phone?: string;
+  email?: string;
+  photoUrl?: string;
+  sectorOrUnit?: string;
+  notes?: string;
 }
 
 export interface PastoralWorkPlan {
@@ -296,7 +318,8 @@ export type ActivityLogCategory =
   | 'Kotak Doa'
   | 'Akun'
   | 'Sinkronisasi'
-  | 'Kunjungan Pastoral';
+  | 'Kunjungan Pastoral'
+  | 'Perangkat Pelayan';
 
 export interface ActivityLogEntry {
   id: string;
@@ -324,5 +347,6 @@ export interface PortalDataState {
   prayerRequests: PrayerRequest[];
   pastoralWorkPlans: PastoralWorkPlan[];
   pastoralVisitations: PastoralVisitation[];
+  ministryLeaders?: MinistryLeaderItem[];
   activityLogs: ActivityLogEntry[];
 }

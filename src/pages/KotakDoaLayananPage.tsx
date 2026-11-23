@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
+  Award,
+  Briefcase,
   CalendarDays,
   Camera,
   CheckCircle2,
@@ -9,13 +11,17 @@ import {
   HeartHandshake,
   Image as ImageIcon,
   Lock,
+  Mail,
   MapPin,
   MessageCircle,
+  Phone,
   PlusCircle,
+  Search,
   Send,
   ShieldCheck,
   Sparkles,
   User,
+  UserCheck,
   Users,
   X,
   ZoomIn,
@@ -23,9 +29,20 @@ import {
 import { usePortal } from '../context/PortalContext';
 import { usePrayerBox } from '../hooks/usePrayerBox';
 import { PRAYER_CATEGORIES } from '../services/prayerBoxService';
-import { PrayerCategory, GalleryItem } from '../types/church';
+import {
+  PrayerCategory,
+  GalleryItem,
+  MinistryLeaderItem,
+  MinistryLeaderGroup,
+} from '../types/church';
 
-export type KotakDoaLayananTab = 'Kotak Doa' | 'Lapor Sakit' | 'Baptis/Sidi/Nikah' | 'Kunjungan Pastoral' | 'Galeri Kegiatan';
+export type KotakDoaLayananTab =
+  | 'Kotak Doa'
+  | 'Lapor Sakit'
+  | 'Baptis/Sidi/Nikah'
+  | 'Kunjungan Pastoral'
+  | 'Perangkat Pelayan'
+  | 'Galeri Kegiatan';
 
 const UNITS = [
   'Unit Rehoboth (Filadelfia)',
@@ -35,13 +52,32 @@ const UNITS = [
   'Simpatisan / Tamu',
 ];
 
-const GALLERY_CATEGORIES = ['Semua', 'Ibadah Minggu', 'Persekutuan & Sektor', 'PAR & Pemuda', 'Diakonia & Sosial', 'Pembangunan & Lainnya'];
+const GALLERY_CATEGORIES = [
+  'Semua',
+  'Ibadah Minggu',
+  'Persekutuan & Sektor',
+  'PAR & Pemuda',
+  'Diakonia & Sosial',
+  'Pembangunan & Lainnya',
+];
+
+const LEADER_FILTER_TABS: { id: string; label: string }[] = [
+  { id: 'Semua', label: 'Semua Perangkat' },
+  { id: 'PHMJ', label: 'PHMJ' },
+  { id: 'PAR', label: 'PAR' },
+  { id: 'PP', label: 'PP (Pemuda)' },
+  { id: 'PERWATA', label: 'PERWATA' },
+  { id: 'PERPRI', label: 'PERPRI' },
+  { id: 'LANSIA', label: 'LANSIA' },
+  { id: 'Koordinator Sektor', label: 'Sektor & Unit' },
+];
 
 const TAB_ITEMS: { id: KotakDoaLayananTab; label: string }[] = [
   { id: 'Kotak Doa', label: 'Kotak Doa' },
   { id: 'Lapor Sakit', label: 'Lapor Sakit' },
   { id: 'Baptis/Sidi/Nikah', label: 'Baptis / Sidi / Nikah' },
   { id: 'Kunjungan Pastoral', label: 'Kunjungan Pastoral' },
+  { id: 'Perangkat Pelayan', label: 'Perangkat Pelayan' },
   { id: 'Galeri Kegiatan', label: 'Galeri Kegiatan' },
 ];
 
@@ -128,6 +164,29 @@ export const KotakDoaLayananPage: React.FC<{ initialTab?: KotakDoaLayananTab }> 
     setNewImageUrl('');
     setIsAddGalleryModalOpen(false);
   };
+
+  // Perangkat Pelayan state
+  const [leaderFilter, setLeaderFilter] = useState<string>('Semua');
+  const [leaderSearch, setLeaderSearch] = useState<string>('');
+
+  const allLeaders: MinistryLeaderItem[] = useMemo(() => {
+    return data.ministryLeaders || [];
+  }, [data.ministryLeaders]);
+
+  const filteredLeaders = useMemo(() => {
+    return allLeaders.filter((item) => {
+      const matchCat = leaderFilter === 'Semua' || item.group === leaderFilter;
+      const q = leaderSearch.toLowerCase().trim();
+      const matchSearch =
+        !q ||
+        item.name.toLowerCase().includes(q) ||
+        item.roleTitle.toLowerCase().includes(q) ||
+        (item.titleOrStatus && item.titleOrStatus.toLowerCase().includes(q)) ||
+        (item.sectorOrUnit && item.sectorOrUnit.toLowerCase().includes(q)) ||
+        (item.notes && item.notes.toLowerCase().includes(q));
+      return matchCat && matchSearch;
+    });
+  }, [allLeaders, leaderFilter, leaderSearch]);
 
   useEffect(() => {
     setActiveTab(initialTab);
@@ -353,7 +412,208 @@ export const KotakDoaLayananPage: React.FC<{ initialTab?: KotakDoaLayananTab }> 
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-1.5 rounded-2xl bg-white p-1.5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22] sm:grid-cols-4 sm:rounded-full">
+      {/* Tombol Pintasan Akses Cepat Layanan */}
+      <section
+        aria-label="Pintasan Akses Cepat Layanan"
+        className="rounded-[28px] bg-gradient-to-br from-[#7F1D1D]/8 via-amber-500/10 to-transparent p-4 sm:p-5 border border-[#7F1D1D]/15 dark:from-[#7F1D1D]/20 dark:via-amber-500/10 dark:border-amber-500/20"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-[#7F1D1D] dark:text-amber-400" />
+            <h2 className="text-xs font-bold uppercase tracking-wider text-[#7F1D1D] dark:text-amber-400">
+              Pintasan Akses Cepat Layanan Jemaat
+            </h2>
+          </div>
+          <span className="text-[11px] text-stone-500 dark:text-stone-400">
+            Akses langsung satu ketukan
+          </span>
+        </div>
+
+        <div className="mt-3.5 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
+          <button
+            type="button"
+            onClick={() => handleTabChange('Perangkat Pelayan')}
+            className={`flex flex-col items-start rounded-2xl p-3 text-left transition-all cursor-pointer ${
+              activeTab === 'Perangkat Pelayan'
+                ? 'bg-[#7F1D1D] text-white shadow-md ring-2 ring-[#7F1D1D] dark:bg-amber-400 dark:text-stone-950 dark:ring-amber-400'
+                : 'bg-white text-stone-800 shadow-xs hover:bg-stone-50 dark:bg-[#161A22] dark:text-stone-100 dark:hover:bg-[#1E232D]'
+            }`}
+          >
+            <div
+              className={`flex h-8 w-8 items-center justify-center rounded-xl transition-colors ${
+                activeTab === 'Perangkat Pelayan'
+                  ? 'bg-white/20 text-white dark:bg-black/20 dark:text-stone-950'
+                  : 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300'
+              }`}
+            >
+              <Users className="h-4 w-4" />
+            </div>
+            <span className="mt-2 text-xs font-bold leading-tight">Perangkat Pelayan</span>
+            <span
+              className={`mt-0.5 text-[10px] ${
+                activeTab === 'Perangkat Pelayan'
+                  ? 'text-white/80 dark:text-stone-900'
+                  : 'text-stone-500 dark:text-stone-400'
+              }`}
+            >
+              PHMJ &amp; Pengurus KSB
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleTabChange('Galeri Kegiatan')}
+            className={`flex flex-col items-start rounded-2xl p-3 text-left transition-all cursor-pointer ${
+              activeTab === 'Galeri Kegiatan'
+                ? 'bg-[#7F1D1D] text-white shadow-md ring-2 ring-[#7F1D1D] dark:bg-amber-400 dark:text-stone-950 dark:ring-amber-400'
+                : 'bg-white text-stone-800 shadow-xs hover:bg-stone-50 dark:bg-[#161A22] dark:text-stone-100 dark:hover:bg-[#1E232D]'
+            }`}
+          >
+            <div
+              className={`flex h-8 w-8 items-center justify-center rounded-xl transition-colors ${
+                activeTab === 'Galeri Kegiatan'
+                  ? 'bg-white/20 text-white dark:bg-black/20 dark:text-stone-950'
+                  : 'bg-pink-50 text-pink-700 dark:bg-pink-950/50 dark:text-pink-300'
+              }`}
+            >
+              <Camera className="h-4 w-4" />
+            </div>
+            <span className="mt-2 text-xs font-bold leading-tight">Galeri Kegiatan</span>
+            <span
+              className={`mt-0.5 text-[10px] ${
+                activeTab === 'Galeri Kegiatan'
+                  ? 'text-white/80 dark:text-stone-900'
+                  : 'text-stone-500 dark:text-stone-400'
+              }`}
+            >
+              Foto &amp; Dokumentasi
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleTabChange('Kunjungan Pastoral')}
+            className={`flex flex-col items-start rounded-2xl p-3 text-left transition-all cursor-pointer ${
+              activeTab === 'Kunjungan Pastoral'
+                ? 'bg-[#7F1D1D] text-white shadow-md ring-2 ring-[#7F1D1D] dark:bg-amber-400 dark:text-stone-950 dark:ring-amber-400'
+                : 'bg-white text-stone-800 shadow-xs hover:bg-stone-50 dark:bg-[#161A22] dark:text-stone-100 dark:hover:bg-[#1E232D]'
+            }`}
+          >
+            <div
+              className={`flex h-8 w-8 items-center justify-center rounded-xl transition-colors ${
+                activeTab === 'Kunjungan Pastoral'
+                  ? 'bg-white/20 text-white dark:bg-black/20 dark:text-stone-950'
+                  : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300'
+              }`}
+            >
+              <CalendarDays className="h-4 w-4" />
+            </div>
+            <span className="mt-2 text-xs font-bold leading-tight">Kunjungan Pastoral</span>
+            <span
+              className={`mt-0.5 text-[10px] ${
+                activeTab === 'Kunjungan Pastoral'
+                  ? 'text-white/80 dark:text-stone-900'
+                  : 'text-stone-500 dark:text-stone-400'
+              }`}
+            >
+              Rencana &amp; Jadwal
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleTabChange('Kotak Doa')}
+            className={`flex flex-col items-start rounded-2xl p-3 text-left transition-all cursor-pointer ${
+              activeTab === 'Kotak Doa'
+                ? 'bg-[#7F1D1D] text-white shadow-md ring-2 ring-[#7F1D1D] dark:bg-amber-400 dark:text-stone-950 dark:ring-amber-400'
+                : 'bg-white text-stone-800 shadow-xs hover:bg-stone-50 dark:bg-[#161A22] dark:text-stone-100 dark:hover:bg-[#1E232D]'
+            }`}
+          >
+            <div
+              className={`flex h-8 w-8 items-center justify-center rounded-xl transition-colors ${
+                activeTab === 'Kotak Doa'
+                  ? 'bg-white/20 text-white dark:bg-black/20 dark:text-stone-950'
+                  : 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300'
+              }`}
+            >
+              <Heart className="h-4 w-4" />
+            </div>
+            <span className="mt-2 text-xs font-bold leading-tight">Kotak Doa</span>
+            <span
+              className={`mt-0.5 text-[10px] ${
+                activeTab === 'Kotak Doa'
+                  ? 'text-white/80 dark:text-stone-900'
+                  : 'text-stone-500 dark:text-stone-400'
+              }`}
+            >
+              Permohonan Doa
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleTabChange('Lapor Sakit')}
+            className={`flex flex-col items-start rounded-2xl p-3 text-left transition-all cursor-pointer ${
+              activeTab === 'Lapor Sakit'
+                ? 'bg-[#7F1D1D] text-white shadow-md ring-2 ring-[#7F1D1D] dark:bg-amber-400 dark:text-stone-950 dark:ring-amber-400'
+                : 'bg-white text-stone-800 shadow-xs hover:bg-stone-50 dark:bg-[#161A22] dark:text-stone-100 dark:hover:bg-[#1E232D]'
+            }`}
+          >
+            <div
+              className={`flex h-8 w-8 items-center justify-center rounded-xl transition-colors ${
+                activeTab === 'Lapor Sakit'
+                  ? 'bg-white/20 text-white dark:bg-black/20 dark:text-stone-950'
+                  : 'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300'
+              }`}
+            >
+              <HeartHandshake className="h-4 w-4" />
+            </div>
+            <span className="mt-2 text-xs font-bold leading-tight">Lapor Sakit</span>
+            <span
+              className={`mt-0.5 text-[10px] ${
+                activeTab === 'Lapor Sakit'
+                  ? 'text-white/80 dark:text-stone-900'
+                  : 'text-stone-500 dark:text-stone-400'
+              }`}
+            >
+              Diakonia Kasih
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleTabChange('Baptis/Sidi/Nikah')}
+            className={`flex flex-col items-start rounded-2xl p-3 text-left transition-all cursor-pointer ${
+              activeTab === 'Baptis/Sidi/Nikah'
+                ? 'bg-[#7F1D1D] text-white shadow-md ring-2 ring-[#7F1D1D] dark:bg-amber-400 dark:text-stone-950 dark:ring-amber-400'
+                : 'bg-white text-stone-800 shadow-xs hover:bg-stone-50 dark:bg-[#161A22] dark:text-stone-100 dark:hover:bg-[#1E232D]'
+            }`}
+          >
+            <div
+              className={`flex h-8 w-8 items-center justify-center rounded-xl transition-colors ${
+                activeTab === 'Baptis/Sidi/Nikah'
+                  ? 'bg-white/20 text-white dark:bg-black/20 dark:text-stone-950'
+                  : 'bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300'
+              }`}
+            >
+              <FileText className="h-4 w-4" />
+            </div>
+            <span className="mt-2 text-xs font-bold leading-tight">Baptis/Sidi/Nikah</span>
+            <span
+              className={`mt-0.5 text-[10px] ${
+                activeTab === 'Baptis/Sidi/Nikah'
+                  ? 'text-white/80 dark:text-stone-900'
+                  : 'text-stone-500 dark:text-stone-400'
+              }`}
+            >
+              Pelayanan Sakramen
+            </span>
+          </button>
+        </div>
+      </section>
+
+      {/* Tabs navigation */}
+      <div className="grid grid-cols-2 gap-1.5 rounded-2xl bg-white p-1.5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22] sm:grid-cols-3 lg:grid-cols-6 sm:rounded-full">
         {TAB_ITEMS.map((tab) => {
           const isSelected = activeTab === tab.id;
           return (
@@ -619,6 +879,432 @@ export const KotakDoaLayananPage: React.FC<{ initialTab?: KotakDoaLayananTab }> 
                     </button>
                   </div>
                 </form>
+              </div>
+            </div>
+          )}
+        </div>
+      ) : activeTab === 'Perangkat Pelayan' ? (
+        <div className="space-y-6">
+          {/* Header Card */}
+          <div className="rounded-[28px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22] sm:p-7">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#7F1D1D]/10 px-3 py-1 text-xs font-bold text-[#7F1D1D] dark:bg-amber-400/20 dark:text-amber-300">
+                  <Award className="h-3.5 w-3.5" />
+                  <span>Periode Pelayanan Aktif 2024 – 2027</span>
+                </span>
+                <h2 className="mt-2 text-xl font-bold text-stone-900 dark:text-stone-100 sm:text-2xl">
+                  Struktur Organisasi &amp; Perangkat Pelayan Jemaat
+                </h2>
+                <p className="mt-1 max-w-2xl text-sm leading-relaxed text-stone-600 dark:text-stone-400">
+                  Daftar susunan Pelaksana Harian Majelis Jemaat (PHMJ), Pengurus Inti Wadah-Wadah Kategorial (Ketua, Sekretaris, Bendahara / KSB), serta Koordinator Sektor di {data.profile.name}.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="rounded-2xl bg-[#F4F6F9] px-4 py-2.5 text-center dark:bg-[#1E232D]">
+                  <p className="text-[10px] font-semibold uppercase text-stone-500 dark:text-stone-400">
+                    PHMJ
+                  </p>
+                  <p className="text-base font-bold text-[#7F1D1D] dark:text-amber-400">
+                    6 Pejabat
+                  </p>
+                </div>
+                <div className="rounded-2xl bg-[#F4F6F9] px-4 py-2.5 text-center dark:bg-[#1E232D]">
+                  <p className="text-[10px] font-semibold uppercase text-stone-500 dark:text-stone-400">
+                    Wadah Kategorial
+                  </p>
+                  <p className="text-base font-bold text-stone-900 dark:text-stone-100">
+                    5 Wadah (KSB)
+                  </p>
+                </div>
+                <div className="rounded-2xl bg-[#F4F6F9] px-4 py-2.5 text-center dark:bg-[#1E232D]">
+                  <p className="text-[10px] font-semibold uppercase text-stone-500 dark:text-stone-400">
+                    Sektor Pelayanan
+                  </p>
+                  <p className="text-base font-bold text-stone-900 dark:text-stone-100">
+                    2 Sektor (4 Unit)
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Filter pills & Search input */}
+            <div className="mt-6 flex flex-col gap-3.5 border-t border-stone-100 pt-5 dark:border-stone-800 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex flex-wrap items-center gap-1.5">
+                {LEADER_FILTER_TABS.map((tab) => {
+                  const active = leaderFilter === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setLeaderFilter(tab.id)}
+                      className={`min-h-[36px] rounded-full px-3.5 text-xs font-semibold transition-colors cursor-pointer ${
+                        active
+                          ? 'bg-[#7F1D1D] text-white dark:bg-amber-400 dark:text-stone-950'
+                          : 'bg-[#F4F6F9] text-stone-700 hover:bg-stone-200/70 dark:bg-[#1E232D] dark:text-stone-300 dark:hover:bg-stone-800'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="relative w-full max-w-xs">
+                <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+                <input
+                  type="text"
+                  value={leaderSearch}
+                  onChange={(e) => setLeaderSearch(e.target.value)}
+                  placeholder="Cari nama, jabatan, atau tugas..."
+                  className="w-full rounded-full bg-[#F4F6F9] py-2 pl-9 pr-8 text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-[#7F1D1D]/25 dark:bg-[#1E232D] dark:text-stone-100"
+                />
+                {leaderSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setLeaderSearch('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-stone-400 hover:text-stone-600"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {filteredLeaders.length === 0 ? (
+            <div className="rounded-[28px] bg-white p-12 text-center text-sm text-stone-500 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22] dark:text-stone-400">
+              Tidak ada data pelayan yang cocok dengan kata kunci &quot;{leaderSearch}&quot;.
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Group 1: PHMJ (Pelaksana Harian Majelis Jemaat) */}
+              {(leaderFilter === 'Semua' || leaderFilter === 'PHMJ') && (
+                <div className="rounded-[28px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22] sm:p-7 space-y-4">
+                  <div className="flex items-center justify-between border-b border-stone-100 pb-4 dark:border-stone-800">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#7F1D1D]/10 text-[#7F1D1D] dark:bg-amber-400/20 dark:text-amber-300">
+                        <Award className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-bold text-stone-900 dark:text-stone-100 sm:text-lg">
+                          Pelaksana Harian Majelis Jemaat (PHMJ)
+                        </h3>
+                        <p className="text-xs text-stone-500 dark:text-stone-400">
+                          Badan kepemimpinan dan pelayanan harian sidang jemaat GPI Getsemani Sorong
+                        </p>
+                      </div>
+                    </div>
+                    <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+                      6 Pejabat
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {filteredLeaders
+                      .filter((l) => l.group === 'PHMJ')
+                      .map((leader) => {
+                        const isKmj = leader.roleTitle.toLowerCase().includes('ketua phmj');
+                        return (
+                          <div
+                            key={leader.id}
+                            className={`flex flex-col justify-between rounded-2xl p-4.5 transition-all ${
+                              isKmj
+                                ? 'bg-gradient-to-br from-[#7F1D1D]/8 via-[#7F1D1D]/4 to-amber-500/10 border-2 border-[#7F1D1D]/30 dark:border-amber-400/40 dark:from-[#7F1D1D]/25 dark:via-[#161A22] dark:to-transparent'
+                                : 'bg-[#F4F6F9] border border-stone-200/60 dark:bg-[#1E232D] dark:border-stone-800'
+                            }`}
+                          >
+                            <div>
+                              <div className="flex items-start justify-between gap-2">
+                                <span
+                                  className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
+                                    isKmj
+                                      ? 'bg-[#7F1D1D] text-white dark:bg-amber-400 dark:text-stone-950'
+                                      : 'bg-stone-200 text-stone-800 dark:bg-stone-700 dark:text-stone-200'
+                                  }`}
+                                >
+                                  {leader.roleTitle}
+                                </span>
+                                {leader.titleOrStatus && (
+                                  <span className="text-[10px] font-semibold text-stone-500 dark:text-stone-400">
+                                    {leader.titleOrStatus}
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="mt-3 flex items-center gap-3">
+                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#7F1D1D] text-sm font-bold text-white shadow-xs dark:bg-amber-400 dark:text-stone-950">
+                                  {leader.name
+                                    .split(' ')
+                                    .filter((p) => !['Pdt.', 'Pnt.', 'Dkn.', 'Vic.', 'Ny.', 'Bpk.', 'Sdri.', 'Sdr.'].includes(p))
+                                    .slice(0, 2)
+                                    .map((n) => n[0])
+                                    .join('')}
+                                </div>
+                                <div className="min-w-0">
+                                  <h4 className="text-sm font-bold text-stone-900 truncate dark:text-stone-100">
+                                    {leader.name}
+                                  </h4>
+                                  <p className="text-[11px] text-[#7F1D1D] dark:text-amber-400 font-medium">
+                                    GPI Getsemani Sorong
+                                  </p>
+                                </div>
+                              </div>
+
+                              {leader.notes && (
+                                <p className="mt-3 text-xs leading-relaxed text-stone-600 dark:text-stone-300">
+                                  {leader.notes}
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="mt-4 pt-3 border-t border-stone-200/60 dark:border-stone-700/60 flex items-center justify-between gap-2">
+                              {leader.phone ? (
+                                <a
+                                  href={`https://wa.me/${leader.phone}?text=${encodeURIComponent(
+                                    `Shalom ${leader.name}, saya warga jemaat GPI Getsemani Sorong ingin berkoordinasi mengenai pelayanan...`
+                                  )}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full bg-emerald-700 px-3.5 text-xs font-semibold text-white hover:bg-emerald-800 transition-colors"
+                                >
+                                  <MessageCircle className="h-3.5 w-3.5" />
+                                  <span>Hubungi WhatsApp</span>
+                                </a>
+                              ) : (
+                                <span className="text-xs text-stone-400">Sekretariat Jemaat</span>
+                              )}
+
+                              {leader.email && (
+                                <a
+                                  href={`mailto:${leader.email}`}
+                                  className="rounded-full bg-stone-200 p-2 text-stone-700 hover:bg-stone-300 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700"
+                                  title={leader.email}
+                                >
+                                  <Mail className="h-3.5 w-3.5" />
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              )}
+
+              {/* Group 2: Pengurus Inti Wadah Kategorial (KSB) */}
+              {(leaderFilter === 'Semua' || ['PAR', 'PP', 'PERWATA', 'PERPRI', 'LANSIA'].includes(leaderFilter)) && (
+                <div className="rounded-[28px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22] sm:p-7 space-y-6">
+                  <div className="flex items-center justify-between border-b border-stone-100 pb-4 dark:border-stone-800">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+                        <Users className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-bold text-stone-900 dark:text-stone-100 sm:text-lg">
+                          Pengurus Inti Wadah-Wadah Kategorial (KSB)
+                        </h3>
+                        <p className="text-xs text-stone-500 dark:text-stone-400">
+                          Ketua, Sekretaris, dan Bendahara pada 5 wadah kategorial pelayanan jemaat
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Loop across Wadah */}
+                  {(['PAR', 'PP', 'PERWATA', 'PERPRI', 'LANSIA'] as MinistryLeaderGroup[])
+                    .filter((g) => leaderFilter === 'Semua' || leaderFilter === g)
+                    .map((groupKey) => {
+                      const leadersInGroup = filteredLeaders.filter((l) => l.group === groupKey);
+                      if (leadersInGroup.length === 0) return null;
+
+                      const groupMeta = {
+                        PAR: {
+                          title: 'Pelayanan Anak & Remaja (PAR)',
+                          desc: 'Pembinaan iman anak sekolah minggu dan remaja gereja.',
+                          badgeColor: 'bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-300',
+                        },
+                        PP: {
+                          title: 'Persekutuan Pemuda (PP)',
+                          desc: 'Pembinaan persekutuan pemuda, minat bakat, dan misi pelayanan muda.',
+                          badgeColor: 'bg-blue-100 text-blue-900 dark:bg-blue-950/60 dark:text-blue-300',
+                        },
+                        PERWATA: {
+                          title: 'Persekutuan Wanita (PERWATA)',
+                          desc: 'Persekutuan ibu-ibu jemaat, perlawatan kasih, dan pembinaan keluarga.',
+                          badgeColor: 'bg-pink-100 text-pink-900 dark:bg-pink-950/60 dark:text-pink-300',
+                        },
+                        PERPRI: {
+                          title: 'Persekutuan Pria (PERPRI)',
+                          desc: 'Persekutuan bapak-bapak, kepemimpinan keluarga, dan kepedulian jemaat.',
+                          badgeColor: 'bg-indigo-100 text-indigo-900 dark:bg-indigo-950/60 dark:text-indigo-300',
+                        },
+                        LANSIA: {
+                          title: 'Persekutuan Lanjut Usia (LANSIA)',
+                          desc: 'Persekutuan opa-oma jemaat, doa syafaat lansia, dan perkunjungan kasih.',
+                          badgeColor: 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-300',
+                        },
+                        PHMJ: { title: '', desc: '', badgeColor: '' },
+                        'Koordinator Sektor': { title: '', desc: '', badgeColor: '' },
+                      }[groupKey];
+
+                      return (
+                        <div key={groupKey} className="rounded-2xl border border-stone-200/70 p-4.5 dark:border-stone-800 space-y-3.5">
+                          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-100 pb-3 dark:border-stone-800/80">
+                            <div>
+                              <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${groupMeta.badgeColor}`}>
+                                {groupKey}
+                              </span>
+                              <h4 className="mt-1 text-sm font-bold text-stone-900 dark:text-stone-100">
+                                {groupMeta.title}
+                              </h4>
+                              <p className="text-[11px] text-stone-500 dark:text-stone-400">
+                                {groupMeta.desc}
+                              </p>
+                            </div>
+                            <span className="text-[11px] font-semibold text-stone-500 dark:text-stone-400">
+                              Pengurus Inti KSB
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-1 gap-3.5 md:grid-cols-3">
+                            {leadersInGroup.map((item) => (
+                              <div
+                                key={item.id}
+                                className="flex flex-col justify-between rounded-xl bg-[#F4F6F9] p-3.5 dark:bg-[#1E232D]"
+                              >
+                                <div>
+                                  <div className="flex items-center justify-between text-[11px]">
+                                    <span className="font-bold text-[#7F1D1D] dark:text-amber-400">
+                                      {item.roleTitle}
+                                    </span>
+                                    {item.sectorOrUnit && (
+                                      <span className="text-stone-500 dark:text-stone-400">
+                                        {item.sectorOrUnit}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <h5 className="mt-1.5 text-sm font-bold text-stone-900 dark:text-stone-100">
+                                    {item.name}
+                                  </h5>
+                                  {item.notes && (
+                                    <p className="mt-1 text-xs text-stone-600 dark:text-stone-300 leading-relaxed">
+                                      {item.notes}
+                                    </p>
+                                  )}
+                                </div>
+
+                                <div className="mt-3 pt-2.5 border-t border-stone-200/60 dark:border-stone-700/60 flex items-center justify-between">
+                                  {item.phone && (
+                                    <a
+                                      href={`https://wa.me/${item.phone}?text=${encodeURIComponent(
+                                        `Shalom ${item.name} (${item.roleTitle} ${groupKey}), saya jemaat GPI Getsemani ingin bertanya mengenai persekutuan...`
+                                      )}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:underline dark:text-emerald-400"
+                                    >
+                                      <MessageCircle className="h-3 w-3" />
+                                      <span>Hubungi WA</span>
+                                    </a>
+                                  )}
+                                  <span className="text-[10px] text-stone-400">
+                                    {item.titleOrStatus || 'Pengurus Wadah'}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+
+              {/* Group 3: Koordinator Sektor Pelayanan */}
+              {(leaderFilter === 'Semua' || leaderFilter === 'Koordinator Sektor') && (
+                <div className="rounded-[28px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] dark:bg-[#161A22] sm:p-7 space-y-4">
+                  <div className="flex items-center justify-between border-b border-stone-100 pb-4 dark:border-stone-800">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-50 text-teal-800 dark:bg-teal-950/40 dark:text-teal-300">
+                        <MapPin className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-bold text-stone-900 dark:text-stone-100 sm:text-lg">
+                          Koordinator Sektor &amp; Unit Pelayanan
+                        </h3>
+                        <p className="text-xs text-stone-500 dark:text-stone-400">
+                          Pendampingan pelayanan jemaat pada wilayah Sektor Filadelfia dan Sektor Petra
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {filteredLeaders
+                      .filter((l) => l.group === 'Koordinator Sektor')
+                      .map((sectorLeader) => (
+                        <div
+                          key={sectorLeader.id}
+                          className="flex flex-col justify-between rounded-2xl bg-[#F4F6F9] p-4.5 dark:bg-[#1E232D] border border-stone-200/60 dark:border-stone-800"
+                        >
+                          <div>
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="font-bold text-[#7F1D1D] dark:text-amber-400">
+                                {sectorLeader.roleTitle}
+                              </span>
+                              <span className="rounded-full bg-stone-200 px-2 py-0.5 text-[10px] font-semibold text-stone-700 dark:bg-stone-700 dark:text-stone-200">
+                                {sectorLeader.titleOrStatus}
+                              </span>
+                            </div>
+
+                            <h4 className="mt-2 text-base font-bold text-stone-900 dark:text-stone-100">
+                              {sectorLeader.name}
+                            </h4>
+                            <p className="mt-1 text-xs font-medium text-stone-700 dark:text-stone-300">
+                              Wilayah: {sectorLeader.sectorOrUnit}
+                            </p>
+                            {sectorLeader.notes && (
+                              <p className="mt-2 text-xs leading-relaxed text-stone-600 dark:text-stone-400">
+                                {sectorLeader.notes}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="mt-4 pt-3 border-t border-stone-200/60 dark:border-stone-700/60 flex items-center justify-between">
+                            {sectorLeader.phone && (
+                              <a
+                                href={`https://wa.me/${sectorLeader.phone}?text=${encodeURIComponent(
+                                  `Shalom ${sectorLeader.name}, saya warga ${sectorLeader.sectorOrUnit} ingin berkoordinasi...`
+                                )}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full bg-emerald-700 px-3.5 text-xs font-semibold text-white hover:bg-emerald-800 transition-colors"
+                              >
+                                <MessageCircle className="h-3.5 w-3.5" />
+                                <span>Hubungi Koordinator</span>
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Firman Penguatan Pelayanan */}
+              <div className="rounded-[24px] bg-amber-50/90 p-5 dark:bg-amber-950/20 sm:p-6">
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-400">
+                  <Sparkles className="h-4 w-4" />
+                  <span>Dasar Firman Pelayanan Jemaat</span>
+                </div>
+                <blockquote className="mt-2.5 font-reading text-sm italic leading-relaxed text-stone-800 dark:text-stone-200">
+                  &ldquo;Layanilah seorang akan yang lain, sesuai dengan karunia yang telah diperoleh tiap-tiap orang sebagai pengurus yang baik dari kasih karunia Allah.&rdquo;
+                </blockquote>
+                <p className="mt-2 text-xs font-semibold text-stone-600 dark:text-stone-400">
+                  — 1 Petrus 4:10
+                </p>
               </div>
             </div>
           )}

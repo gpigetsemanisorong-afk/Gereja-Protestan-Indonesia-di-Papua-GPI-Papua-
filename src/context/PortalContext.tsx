@@ -171,6 +171,10 @@ function loadStoredData(): PortalDataState {
         parsed.pastoralVisitations && parsed.pastoralVisitations.length > 0
           ? parsed.pastoralVisitations
           : INITIAL_PORTAL_DATA.pastoralVisitations,
+      ministryLeaders:
+        parsed.ministryLeaders && parsed.ministryLeaders.length > 0
+          ? parsed.ministryLeaders
+          : INITIAL_PORTAL_DATA.ministryLeaders,
       activityLogs: Array.isArray(parsed.activityLogs)
         ? parsed.activityLogs
         : INITIAL_PORTAL_DATA.activityLogs,
