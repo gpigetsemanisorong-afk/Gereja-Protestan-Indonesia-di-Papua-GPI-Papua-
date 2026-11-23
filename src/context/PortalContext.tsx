@@ -163,6 +163,14 @@ function loadStoredData(): PortalDataState {
       prayerRequests: Array.isArray(parsed.prayerRequests)
         ? parsed.prayerRequests
         : INITIAL_PORTAL_DATA.prayerRequests,
+      pastoralWorkPlans:
+        parsed.pastoralWorkPlans && parsed.pastoralWorkPlans.length > 0
+          ? parsed.pastoralWorkPlans
+          : INITIAL_PORTAL_DATA.pastoralWorkPlans,
+      pastoralVisitations:
+        parsed.pastoralVisitations && parsed.pastoralVisitations.length > 0
+          ? parsed.pastoralVisitations
+          : INITIAL_PORTAL_DATA.pastoralVisitations,
       activityLogs: Array.isArray(parsed.activityLogs)
         ? parsed.activityLogs
         : INITIAL_PORTAL_DATA.activityLogs,

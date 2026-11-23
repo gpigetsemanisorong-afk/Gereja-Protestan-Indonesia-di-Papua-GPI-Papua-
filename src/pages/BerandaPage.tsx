@@ -100,6 +100,21 @@ export const BerandaPage: React.FC = () => {
     }
   };
 
+  const calendarSchedules = React.useMemo(() => {
+    const pastoralAsSchedules = (data.pastoralVisitations || []).map((v) => ({
+      id: `vis-${v.id}`,
+      category: 'Sektor/Unit' as const,
+      title: `Kunjungan Pastoral: ${v.familyName}`,
+      date: v.scheduledDate,
+      time: v.time,
+      location: v.address,
+      mapsQuery: v.address,
+      leader: v.assignedMajelis,
+      notes: `Status: ${v.status} | Kebutuhan: ${v.prayerNeed}`,
+    }));
+    return [...data.schedules, ...pastoralAsSchedules];
+  }, [data.schedules, data.pastoralVisitations]);
+
   return (
     <div className="space-y-6 md:space-y-7">
       {shareNotice && (
@@ -219,7 +234,7 @@ export const BerandaPage: React.FC = () => {
 
         {/* RIGHT COLUMN */}
         <aside>
-          <KalenderKegiatanWidget schedules={data.schedules} />
+          <KalenderKegiatanWidget schedules={calendarSchedules} />
         </aside>
       </div>
 

@@ -14,8 +14,7 @@ export type PageRoute =
   | 'statistik'
   | 'profil'
   | 'tentang'
-  | 'dashboard'
-  | 'login';
+  | 'dashboard';
 
 export type HymnBook = 'KJ' | 'PKJ' | 'NKB' | 'DSL' | 'NR';
 
@@ -222,12 +221,38 @@ export interface WorkspaceSyncConfig {
 
 export interface ServiceRequestLog {
   id: string;
-  type: 'Pokok Doa' | 'Lapor Sakit' | 'Baptis/Sidi/Nikah';
+  type: 'Pokok Doa' | 'Lapor Sakit' | 'Baptis/Sidi/Nikah' | 'Kunjungan Pastoral';
   requesterName: string;
   phone: string;
   unit: string;
   detail: string;
   createdAt: string;
+}
+
+export interface PastoralWorkPlan {
+  id: string;
+  quarter: string;
+  title: string;
+  objective: string;
+  sectorOrUnit: string;
+  targetMonth: string;
+  status: 'Direncanakan' | 'Berjalan' | 'Selesai';
+}
+
+export interface PastoralVisitation {
+  id: string;
+  planId?: string;
+  familyName: string;
+  sectorOrUnit: string;
+  address: string;
+  scheduledDate: string; // format 'YYYY-MM-DD' or 'Senin, 23 Nov 2026'
+  time: string;
+  status: 'Terjadwal' | 'Selesai' | 'Dijadwalkan Ulang';
+  assignedMajelis: string;
+  prayerNeed: string;
+  resultReport?: string;
+  diakoniaAction?: string;
+  linkedRequestId?: string;
 }
 
 export type PrayerCategory =
@@ -269,7 +294,8 @@ export type ActivityLogCategory =
   | 'Layanan'
   | 'Kotak Doa'
   | 'Akun'
-  | 'Sinkronisasi';
+  | 'Sinkronisasi'
+  | 'Kunjungan Pastoral';
 
 export interface ActivityLogEntry {
   id: string;
@@ -295,5 +321,7 @@ export interface PortalDataState {
   syncConfig: WorkspaceSyncConfig;
   serviceRequests: ServiceRequestLog[];
   prayerRequests: PrayerRequest[];
+  pastoralWorkPlans: PastoralWorkPlan[];
+  pastoralVisitations: PastoralVisitation[];
   activityLogs: ActivityLogEntry[];
 }

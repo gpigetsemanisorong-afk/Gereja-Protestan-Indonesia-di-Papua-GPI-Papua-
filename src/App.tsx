@@ -1,7 +1,7 @@
 import React from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { PortalProvider, usePortal } from './context/PortalContext';
-import { MobileBottomNav, TopNavbar } from './components/Navbar';
+import { AppMenuSheet, MobileBottomNav, TopNavbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { OfflineIndicator } from './components/PWAComponents';
 import { BerandaPage } from './pages/BerandaPage';
@@ -11,22 +11,15 @@ import { JadwalIbadahPage } from './pages/JadwalIbadahPage';
 import { WartaJemaatPage } from './pages/WartaJemaatPage';
 import { NyanyianRohaniPage } from './pages/NyanyianRohaniPage';
 import { AlkitabPage } from './pages/AlkitabPage';
-import { LayananJemaatPage } from './pages/LayananJemaatPage';
-import { KotakDoaPage } from './pages/KotakDoaPage';
+import { KotakDoaLayananPage } from './pages/KotakDoaLayananPage';
 import { LaporanKeuanganPage } from './pages/LaporanKeuanganPage';
 import { DataStatistikPage } from './pages/DataStatistikPage';
 import { ProfilKontakPage } from './pages/ProfilKontakPage';
 import { TentangAplikasiPage } from './pages/TentangAplikasiPage';
-import { LoginPage } from './pages/LoginPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 
 const PortalShell: React.FC = () => {
-  const { route, setRoute, currentUsername } = usePortal();
-
-  // Proteksi Penuh: Jika pengguna belum login, seluruh aplikasi terkunci di balik layar login
-  if (!currentUsername) {
-    return <LoginPage />;
-  }
+  const { route, menuOpen, openMenuSheet, closeMenuSheet } = usePortal();
 
   const renderPage = () => {
     switch (route) {
@@ -45,9 +38,9 @@ const PortalShell: React.FC = () => {
       case 'alkitab':
         return <AlkitabPage />;
       case 'layanan':
-        return <LayananJemaatPage />;
+        return <KotakDoaLayananPage initialTab="Lapor Sakit" />;
       case 'kotak-doa':
-        return <KotakDoaPage />;
+        return <KotakDoaLayananPage initialTab="Kotak Doa" />;
       case 'keuangan':
         return <LaporanKeuanganPage />;
       case 'statistik':
@@ -56,8 +49,6 @@ const PortalShell: React.FC = () => {
         return <ProfilKontakPage />;
       case 'tentang':
         return <TentangAplikasiPage />;
-      case 'login':
-        return <BerandaPage />;
       case 'dashboard':
         return <AdminDashboardPage />;
       default:
@@ -66,28 +57,26 @@ const PortalShell: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-stone-900 transition-colors dark:bg-[#0F1115] dark:text-stone-100">
-      <TopNavbar />
+    <div className="min-h-screen bg-[#F4F6F9] text-stone-900 transition-colors dark:bg-[#0D1015] dark:text-stone-100">
+      <TopNavbar onOpenMenu={() => openMenuSheet(false)} />
 
-      <main className="mx-auto max-w-[1280px] px-4 py-6 md:px-6 md:py-8">
-        {route !== 'beranda' && route !== 'login' && route !== 'dashboard' && (
-          <div className="mb-5">
-            <button
-              type="button"
-              onClick={() => setRoute('beranda')}
-              className="inline-flex min-h-[36px] items-center gap-1.5 text-xs font-semibold text-stone-600 transition-colors hover:text-[#7F1D1D] dark:text-stone-400 dark:hover:text-amber-400 cursor-pointer"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span>Kembali ke Beranda</span>
-            </button>
-          </div>
-        )}
-
-        {renderPage()}
+      <main className="mx-auto max-w-[1200px] px-4 pb-24 pt-4 md:px-6 md:pb-8 md:pt-6">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={route}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+          >
+            {renderPage()}
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       <Footer />
-      <MobileBottomNav />
+      <MobileBottomNav menuOpen={menuOpen} onOpenMenu={() => openMenuSheet(false)} />
+      <AppMenuSheet open={menuOpen} onClose={closeMenuSheet} />
       <OfflineIndicator />
     </div>
   );
